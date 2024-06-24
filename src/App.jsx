@@ -1,11 +1,9 @@
-import './index.css';
-import {
-  RouterProvider,
-  createBrowserRouter,
-} from 'react-router-dom';
-import TotalTxs from './pages/TotalTxs';
-import BlockTxs from './pages/BlockTxs';
-import RootLayout from './pages/RootLayout';
+import "./index.css";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import TotalTxs from "./pages/TotalTxs";
+import BlockTxs from "./pages/BlockTxs";
+import RootLayout from "./pages/RootLayout";
+import CreateEditFeedback from "./pfa/screens/CreateEditFeedback";
 // import { ethers } from 'ethers';
 
 // (async () => {
@@ -19,20 +17,20 @@ import RootLayout from './pages/RootLayout';
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <RootLayout />,
     children: [
       {
         index: true,
-        path: '/',
-        element: <TotalTxs />,
+        path: "/",
+        element: <CreateEditFeedback />,
         loader: () => {
           window.scrollTo(0, 0);
           return null;
         },
       },
       {
-        path: 'user/:address',
+        path: "user/:address",
         element: <BlockTxs />,
         loader: () => {
           window.scrollTo(0, 0);
@@ -40,7 +38,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: 'block/:height',
+        path: "block/:height",
         element: <BlockTxs />,
         loader: () => {
           window.scrollTo(0, 0);
