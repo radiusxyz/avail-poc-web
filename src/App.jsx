@@ -3,7 +3,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import TotalTxs from "./pages/TotalTxs";
 import BlockTxs from "./pages/BlockTxs";
 import RootLayout from "./pages/RootLayout";
-import CreateEditFeedback from "./pfa/screens/CreateEditFeedback";
+import Bridge from "./pfa/screens/Bridge";
 // import { ethers } from 'ethers';
 
 // (async () => {
@@ -23,7 +23,7 @@ const router = createBrowserRouter([
       {
         index: true,
         path: "/",
-        element: <CreateEditFeedback />,
+        element: <Bridge />,
         loader: () => {
           window.scrollTo(0, 0);
           return null;

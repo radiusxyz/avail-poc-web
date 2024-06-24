@@ -1,6 +1,5 @@
 import React, { useReducer, useState } from "react";
 import classes from "./styles/CreateEditFeedback.module.css";
-import { useParams } from "react-router-dom";
 import radius from "../assets/images/favicon1.png";
 import InputRow from "../components/InputRow";
 import Arrow from "../components/UI/Arrow";
@@ -16,7 +15,7 @@ const tokens = [{ label: "RAD" }, { label: "ETH" }];
 
 const rollups = [{ label: "Rollup A" }, { label: "Rollup B" }, { label: "Rollup C" }];
 
-const CreateEditFeedback = () => {
+const Bridge = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [dynamicNetworks, setDynamicNetworks] = useState(rollups);
   const handleIsConnected = () => {
@@ -186,4 +185,4 @@ const CreateEditFeedback = () => {
   );
 };
 
-export default CreateEditFeedback;
+export default Bridge;

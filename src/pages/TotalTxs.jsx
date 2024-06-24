@@ -1,9 +1,8 @@
-import React, { useState } from "react";
-import CreateEditFeedback from "../pfa/screens/CreateEditFeedback";
-import { suggestionList } from "../pfa/model";
+import React from "react";
+import Bridge from "../pfa/screens/Bridge";
 
 const TotalTxs = () => {
-  return <CreateEditFeedback />;
+  return <Bridge />;
 };
 
 export default TotalTxs;
