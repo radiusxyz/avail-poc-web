@@ -1,0 +1,14 @@
+.level_0 {
+  align-items: center;
+  justify-content: start;
+  gap: 16px;
+}
+.level_1 {
+  justify-content: space-between;
+  margin-top: 16px;
+}
+.level_2 {
+  width: auto;
+  gap: 8px;
+  align-items: center;
+}

@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import Table from "../components/Table";
 import { useTxs } from "../contexts/TxsContext";
+import CreateEditFeedback from "../pfa/screens/CreateEditFeedback";
+import { suggestionList } from "../pfa/model";
 
 const TotalTxs = () => {
   const { txs } = useTxs();
+  const [suggestions, setSuggestions] = useState(suggestionList);
 
+  const handleSetSuggestions = (handler) => setSuggestions(handler);
   const headers = ["role", "block", "timestamp", "submission status", "reward", "leader", "violation"];
 
   console.log(txs);
@@ -21,7 +25,7 @@ const TotalTxs = () => {
     };
   });
 
-  return <Table headers={headers} entries={entries} />;
+  return <CreateEditFeedback suggestions={suggestions} handler={handleSetSuggestions} />;
 };
 
 export default TotalTxs;

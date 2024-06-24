@@ -1,0 +1,27 @@
+.level_0 {
+  flex-direction: column;
+  gap: 24px;
+  background-color: #ffffff;
+  padding: 19px 24px;
+  border-radius: 10px;
+}
+.level_1 {
+  align-items: center;
+  justify-content: space-between;
+}
+.level_2 {
+  flex-direction: column;
+  gap: 8px;
+}
+.level_3 {
+  justify-content: start;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 1160px) {
+  .level_0 {
+    width: 100%;
+    min-width: 172px;
+  }
+}

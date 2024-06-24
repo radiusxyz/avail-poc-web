@@ -1,0 +1,12 @@
+.level_0 {
+  margin-top: 8px;
+  gap: 16px;
+  min-height: 80px;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.level_1 {
+  justify-content: space-between;
+  margin-top: 16px;
+}

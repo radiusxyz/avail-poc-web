@@ -1,0 +1,28 @@
+.level_0 {
+  width: 100%;
+  justify-content: center;
+}
+
+.level_1 {
+  flex-direction: column;
+  gap: 68px;
+}
+
+.level_2 {
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.level_3 {
+  justify-content: flex-end;
+  gap: 16px;
+}
+@media (max-width: 600px) {
+  .level_3 {
+    flex-direction: column-reverse;
+  }
+  .level_4 {
+    width: 100%;
+  }
+}

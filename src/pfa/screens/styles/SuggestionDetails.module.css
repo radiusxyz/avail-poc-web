@@ -1,0 +1,17 @@
+.level_0 {
+  width: 100%;
+  justify-content: center;
+}
+
+.level_1 {
+  flex-direction: column;
+  gap: 24px;
+  max-width: 730px;
+  width: 100%;
+}
+
+.level_2 {
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}

@@ -1,0 +1,21 @@
+.level_0 {
+  flex-direction: column;
+  gap: 32px;
+}
+.level_1 {
+  flex-direction: column;
+  gap: 32px;
+  position: relative;
+}
+
+.level_2 {
+  flex-direction: column;
+  gap: 32px;
+  margin-left: 45px;
+}
+
+.level_3 {
+  flex-direction: column;
+  gap: 32px;
+  position: relative;
+}

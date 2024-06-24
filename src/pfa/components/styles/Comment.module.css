@@ -1,0 +1,26 @@
+.level_0 {
+  gap: 32px;
+}
+
+.level_1 {
+  flex-direction: column;
+  gap: 17px;
+  width: 100%;
+}
+
+.level_2 {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.level_3 {
+  flex-direction: column;
+}
+
+.level_4 {
+  margin-top: 8px;
+  gap: 16px;
+  min-height: 80px;
+  align-items: start;
+  justify-content: space-between;
+}

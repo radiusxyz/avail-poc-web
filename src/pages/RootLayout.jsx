@@ -184,21 +184,7 @@ const RootLayout = () => {
   return (
     <TableWrapper>
       <Head>
-        <HeadTop>
-          <HeadTopLeft>
-            <Search>
-              <img src={search} />
-              <SearchInput placeholder='Search...' value={value} onChange={handleChange} onKeyDown={handleKeyDown} />
-            </Search>
-            <FilterBtn onClick={handleFilter}>
-              <img src={filter} />
-            </FilterBtn>
-          </HeadTopLeft>
-          <Address>{txs[0].address}</Address>
-          <HeadTopRight>
-            <Logo src={magnifier} />
-          </HeadTopRight>
-        </HeadTop>
+        <HeadTop></HeadTop>
       </Head>
       <Outlet />
       <Footer></Footer>
