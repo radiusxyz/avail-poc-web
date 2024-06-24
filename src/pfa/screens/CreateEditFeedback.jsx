@@ -1,7 +1,7 @@
 import React, { useReducer } from "react";
 import classes from "./styles/CreateEditFeedback.module.css";
 import { useParams } from "react-router-dom";
-import plus_icon from "../assets/icons/modal_plus_icon.svg";
+import radius from "../assets/images/favicon1.png";
 import pen_icon from "../assets/icons/modal_pen_icon.svg";
 import InputRow from "../components/InputRow";
 import Arrow from "../components/UI/Arrow";
@@ -13,15 +13,9 @@ import { useNavigate } from "react-router";
 import cuid from "cuid";
 import { ButtonWrapper, Icon, ModalTitle, TextareaWrapper, Wrapper } from "./styles/CreateEditFeedbackStyles";
 
-const categories = [
-  { label: "Feature" },
-  { label: "UI" },
-  { label: "UX" },
-  { label: "Ehnhancement" },
-  { label: "Bug" },
-];
+const tokens = [{ label: "RAD" }, { label: "ETH" }];
 
-const statuses = [{ label: "Planned" }, { label: "In-Progress" }, { label: "Live" }];
+const rollups = [{ label: "Rollup A" }, { label: "Rollup B" }, { label: "Rollup C" }, { label: "Rollup D" }];
 
 const CreateEditFeedback = ({ edit, suggestions, handler }) => {
   const navigate = useNavigate();
@@ -83,7 +77,7 @@ const CreateEditFeedback = ({ edit, suggestions, handler }) => {
       };
     }
     if (action.type === "CATEGORY_SELECT") {
-      return { ...state, category: action.val };
+      return { ...state, rollup: action.val };
     }
     if (action.type === "STATUS_SELECT") {
       return { ...state, status: action.val };
@@ -102,8 +96,8 @@ const CreateEditFeedback = ({ edit, suggestions, handler }) => {
       isValid: edit ? true : false,
       touched: edit ? true : false,
     },
-    category: categories[0].label,
-    status: statuses[0].label,
+    from: rollups[0].label,
+    to: rollups[1].label,
   });
 
   const handleTitle = (event) => {
@@ -131,9 +125,8 @@ const CreateEditFeedback = ({ edit, suggestions, handler }) => {
     dispatchForm({ type: "STATUS_SELECT", val: status });
   };
 
-  let icon = edit ? pen_icon : plus_icon;
   // let modalTitle = edit ? `Editing ‘${feedback.title}’` : "Create New Feedback";
-  let modalTitle = "Bridge Tokens Between Rollups";
+  let modalTitle = "Radius Bridge";
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -149,7 +142,7 @@ const CreateEditFeedback = ({ edit, suggestions, handler }) => {
                 id: id,
                 title: formState.title.value,
                 details: formState.details.value,
-                tag: formState.category,
+                tag: formState.rollup,
                 status: formState.status,
                 upvotedByMe: feedback.upvotedByMe || false,
                 upvotes: feedback.upvotes || 0,
@@ -167,25 +160,18 @@ const CreateEditFeedback = ({ edit, suggestions, handler }) => {
   return (
     <Container className={classes.level_0}>
       <Container className={classes.level_1}>
-        {/* <Container>
-          <Button
-            kind='back'
-            paint='transparent'
-            onClick={() => {
-              navigate("/");
-            }}
-          >
-            <Arrow direction='left' paint='#4661E6' />
-            Go back
-          </Button>
-        </Container> */}
         <Wrapper edit={edit}>
           <Icon>
-            <img src={icon} alt={`${icon}`} />
+            <img width='64' src={radius} alt={`${radius}`} />
           </Icon>
           <ModalTitle>{modalTitle}</ModalTitle>
           <Container className={classes.level_2}>
-            <InputRow title='Feedback Title' description='Add a short, descriptive headline'>
+            <InputRow title='Token' description='Select the asset you would like to bridge'>
+              <SelectBox name='options' options={tokens} handleOption={handleCategory}>
+                <Arrow direction='down' paint='#4661E6' />
+              </SelectBox>
+            </InputRow>
+            <InputRow title='Amount' description='Input the amount you would like to bridge'>
               <Input
                 id='title'
                 name='title'
@@ -195,34 +181,15 @@ const CreateEditFeedback = ({ edit, suggestions, handler }) => {
                 defaultValue={formState.title.value}
               />
             </InputRow>
-            <InputRow title='Category' description='Choose a category for your feedback'>
-              <SelectBox name='options' options={categories} handleOption={handleCategory}>
+            <InputRow title='From' description='Select the network you want to bridge from'>
+              <SelectBox name='options' options={rollups} handleOption={handleCategory}>
                 <Arrow direction='down' paint='#4661E6' />
               </SelectBox>
             </InputRow>
-            {edit && (
-              <InputRow title='Update Status' description='Change feedback state'>
-                <SelectBox name='statuses' options={statuses} handleOption={handleStatus}>
-                  <Arrow direction='down' paint='#4661E6' />
-                </SelectBox>
-              </InputRow>
-            )}
-            <InputRow
-              title='Feedback Detail'
-              description='Include any specific comments on what should be improved, added,
-            etc.'
-            >
-              <TextareaWrapper>
-                <Input
-                  name='detail'
-                  id='detail'
-                  as='textarea'
-                  onBlur={handleDetailsBlur}
-                  onChange={handleDetails}
-                  error={!formState.details.isValid && formState.details.touched ? true : false}
-                  defaultValue={formState.details.value}
-                />
-              </TextareaWrapper>
+            <InputRow title='To' description='Select the network you want to bridge to'>
+              <SelectBox name='options' options={rollups} handleOption={handleCategory}>
+                <Arrow direction='down' paint='#4661E6' />
+              </SelectBox>
             </InputRow>
           </Container>
           <Container className={classes.level_3}>
@@ -234,21 +201,8 @@ const CreateEditFeedback = ({ edit, suggestions, handler }) => {
               </ButtonWrapper>
             )}
             <Container>
-              <Button
-                className={classes.level_4}
-                kind='default'
-                type='button'
-                onClick={() => {
-                  navigate("/");
-                }}
-                paint='#3A4374'
-              >
-                Cancel
-              </Button>
-            </Container>
-            <Container>
               <Button className={classes.level_4} kind='default' paint='#AD1FEA' type='button' onClick={handleSubmit}>
-                {edit ? "Save Changes" : "Add Feedback"}
+                Bridge
               </Button>
             </Container>
           </Container>

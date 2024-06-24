@@ -183,9 +183,7 @@ const RootLayout = () => {
 
   return (
     <TableWrapper>
-      <Head>
-        <HeadTop></HeadTop>
-      </Head>
+      <Head></Head>
       <Outlet />
       <Footer></Footer>
     </TableWrapper>

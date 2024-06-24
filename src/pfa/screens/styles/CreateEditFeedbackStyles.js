@@ -1,8 +1,7 @@
 import styled from "styled-components";
 
 export const Wrapper = styled.form`
-  max-width: 540px;
-  max-height: ${(props) => (props.edit ? "820px" : "657px")};
+  min-width: 540px;
   padding: 52px 42px 40px 42px;
   background-color: #ffffff;
   position: relative;
