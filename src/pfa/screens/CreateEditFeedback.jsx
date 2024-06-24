@@ -18,6 +18,7 @@ const rollups = [{ label: "Rollup A" }, { label: "Rollup B" }, { label: "Rollup 
 
 const CreateEditFeedback = () => {
   const [isConnected, setIsConnected] = useState(false);
+  const [dynamicNetworks, setDynamicNetworks] = useState(rollups);
   const handleIsConnected = () => {
     setIsConnected((prevState) => !prevState);
   };
@@ -27,7 +28,7 @@ const CreateEditFeedback = () => {
     if (action.type === "AMOUNT_INPUT") {
       return {
         ...state,
-        title: {
+        amount: {
           value: action.val,
           isValid: action.val.length !== 0,
           touched: true,
@@ -38,16 +39,16 @@ const CreateEditFeedback = () => {
     if (action.type === "AMOUNT_VALID") {
       return {
         ...state,
-        title: { ...state.title, isValid: action.val },
+        amount: { ...state.amount, isValid: action.val },
       };
     }
 
     if (action.type === "AMOUNT_TOUCH") {
       return {
         ...state,
-        title: {
-          ...state.title,
-          isValid: !(action.val && state.title.value === ""),
+        amount: {
+          ...state.amount,
+          isValid: !(action.val && state.amount.value === ""),
           touched: action.val,
         },
       };
@@ -78,7 +79,7 @@ const CreateEditFeedback = () => {
     dispatchForm({ type: "TOKEN_SELECT", val: token });
   };
   const handleAmount = (event) => {
-    dispatchForm({ type: "AMOUNT_INPUT", val: event.target.value.trim() });
+    dispatchForm({ type: "AMOUNT_INPUT", val: event.target.value?.trim() });
   };
 
   const handleAmountBlur = (event) => {
@@ -164,7 +165,7 @@ const CreateEditFeedback = () => {
                     type='button'
                     onClick={handleSubmit}
                   >
-                    Bridge
+                    Transfer
                   </Button>
                 </Container>
               </>
