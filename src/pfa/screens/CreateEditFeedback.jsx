@@ -14,7 +14,7 @@ import { ButtonWrapper, Icon, ModalTitle, Wrapper } from "./styles/CreateEditFee
 
 const tokens = [{ label: "RAD" }, { label: "ETH" }];
 
-const rollups = [{ label: "Rollup A" }, { label: "Rollup B" }, { label: "Rollup C" }, { label: "Rollup D" }];
+const rollups = [{ label: "Rollup A" }, { label: "Rollup B" }, { label: "Rollup C" }];
 
 const CreateEditFeedback = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -54,32 +54,33 @@ const CreateEditFeedback = () => {
       };
     }
     if (action.type === "TOKEN_SELECT") {
-      return { ...state, rollup: action.val };
+      return { ...state, token: action.val };
     }
     if (action.type === "FROM_SELECT") {
-      return { ...state, rollup: action.val };
+      return { ...state, from: action.val };
     }
     if (action.type === "TO_SELECT") {
-      return { ...state, status: action.val };
+      return { ...state, to: action.val };
     }
     return { ...state };
   };
 
   const [formState, dispatchForm] = useReducer(formReducer, {
+    token: "",
     amount: {
       value: "",
       isValid: false,
       touched: false,
     },
-    from: rollups[0].label,
-    to: rollups[1].label,
+    from: "",
+    to: "",
   });
 
   const handleToken = (token) => {
     dispatchForm({ type: "TOKEN_SELECT", val: token });
   };
   const handleAmount = (event) => {
-    dispatchForm({ type: "AMOUNT_INPUT", val: event.target.value?.trim() });
+    dispatchForm({ type: "AMOUNT_INPUT", val: event.target.value.trim() });
   };
 
   const handleAmountBlur = (event) => {
@@ -87,9 +88,11 @@ const CreateEditFeedback = () => {
     console.log(formState.amount);
   };
   const handleFrom = (from) => {
+    setDynamicNetworks(rollups.filter((network) => network.label !== from));
     dispatchForm({ type: "FROM_SELECT", val: from });
   };
   const handleTo = (to) => {
+    setDynamicNetworks(rollups.filter((network) => network.label !== to));
     dispatchForm({ type: "TO_SELECT", val: to });
   };
 
@@ -99,12 +102,6 @@ const CreateEditFeedback = () => {
     event.preventDefault();
     dispatchForm({ type: "AMOUNT_TOUCH", val: true });
     dispatchForm({ type: "DETAILS_TOUCH", val: true });
-    //Ask Abdulla why does not it work without timer
-    if (formState.amount.isValid && formState.details.isValid) {
-      setTimeout(() => {
-        navigate("/");
-      }, 200);
-    }
   };
 
   return (
@@ -132,12 +129,12 @@ const CreateEditFeedback = () => {
               />
             </InputRow>
             <InputRow title='From' description='Select the network you want to bridge from'>
-              <SelectBox name='options' options={rollups} handleOption={handleFrom}>
+              <SelectBox name='options' options={dynamicNetworks} handleOption={handleFrom}>
                 <Arrow direction='down' paint='#4661E6' />
               </SelectBox>
             </InputRow>
             <InputRow title='To' description='Select the network you want to bridge to'>
-              <SelectBox name='options' options={rollups} handleOption={handleTo}>
+              <SelectBox name='options' options={dynamicNetworks} handleOption={handleTo}>
                 <Arrow direction='down' paint='#4661E6' />
               </SelectBox>
             </InputRow>

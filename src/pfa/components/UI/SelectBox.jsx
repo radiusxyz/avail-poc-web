@@ -3,7 +3,7 @@ import { SelectBoxContainer, StyledSelectBox } from "./styles/StyledSelectBox";
 import OptionsContainer from "./OptionsContainer";
 
 const SelectBox = (props) => {
-  const [option, setOption] = useState(props.options[0].label);
+  const [option, setOption] = useState("Click to select");
   const [isShown, setIsShown] = useState(false);
 
   const handleSelectBoxClick = () => {
@@ -13,7 +13,7 @@ const SelectBox = (props) => {
   return (
     <SelectBoxContainer>
       <StyledSelectBox
-        as="div"
+        as='div'
         onClick={handleSelectBoxClick}
         active={props.active || (!props.sortButton && isShown && true)}
         isShown={isShown}
