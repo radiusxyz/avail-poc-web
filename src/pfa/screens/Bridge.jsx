@@ -1,4 +1,4 @@
-import React, { useReducer, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import classes from "./styles/CreateEditFeedback.module.css";
 import radius from "../assets/images/favicon1.png";
 import InputRow from "../components/InputRow";
@@ -13,29 +13,22 @@ import { _TypedDataEncoder as typedDataEncoder } from "@ethersproject/hash";
 
 import { splitSignature } from "@ethersproject/bytes";
 
-import {
-  ButtonWrapper,
-  Icon,
-  ModalTitle,
-  Wrapper,
-} from "./styles/CreateEditFeedbackStyles";
+import { ButtonWrapper, Icon, ModalTitle, Wrapper } from "./styles/CreateEditFeedbackStyles";
 
 const tokens = [{ label: "RAD" }, { label: "ETH" }];
 
-const rollups = [
-  { label: "Rollup A" },
-  { label: "Rollup B" },
-  { label: "Rollup C" },
-];
+const rollups = [{ label: "Rollup A" }, { label: "Rollup B" }, { label: "Rollup C" }];
 
 const Bridge = () => {
-  const [account, setAccount] = useState();
+  const [account, setAccount] = useState(localStorage.getItem("account"));
   const { sdk, connected, connecting, provider, chainId } = useSDK();
 
   const connect = async () => {
     try {
       const accounts = await sdk?.connect();
-      setAccount(accounts?.[0]);
+      const account = accounts?.[0];
+      setAccount(account);
+      localStorage.setItem("account", account);
     } catch (err) {
       console.warn("failed to connect..", err);
     }
@@ -45,10 +38,18 @@ const Bridge = () => {
     try {
       sdk?.disconnect();
       setAccount(undefined);
+      localStorage.removeItem("account");
     } catch (err) {
-      console.warn("failed to connect..", err);
+      console.warn("failed to disconnect..", err);
     }
   };
+
+  useEffect(() => {
+    const storedAccount = localStorage.getItem("account");
+    if (storedAccount && !connected && !connecting) {
+      connect();
+    }
+  }, [connected, connecting]);
 
   const [dynamicNetworks, setDynamicNetworks] = useState(rollups);
 
@@ -154,10 +155,7 @@ const Bridge = () => {
         attachedMoneyInEth: 4.2,
         from: {
           name: "Cow",
-          wallets: [
-            "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
-            "0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF",
-          ],
+          wallets: ["0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826", "0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF"],
         },
         to: [
           {
@@ -206,7 +204,7 @@ const Bridge = () => {
           from: account,
         },
         function (err, result) {
-          debugger;
+          // debugger;
           if (err) return console.dir(err);
           if (result.error) {
             alert(result.error.message);
@@ -235,64 +233,37 @@ const Bridge = () => {
 
   return (
     <Container className={classes.level_0}>
+      <ModalTitle>{account}</ModalTitle>
       <Container className={classes.level_1}>
         <Wrapper>
           <Icon>
-            <img width="64" src={radius} alt={`${radius}`} />
+            <img width='64' src={radius} alt={`${radius}`} />
           </Icon>
           <ModalTitle>{modalTitle}</ModalTitle>
           <Container className={classes.level_2}>
-            <InputRow
-              title="Token"
-              description="Select the asset you would like to bridge"
-            >
-              <SelectBox
-                name="options"
-                options={tokens}
-                handleOption={handleToken}
-              >
-                <Arrow direction="down" paint="#4661E6" />
+            <InputRow title='Token' description='Select the asset you would like to bridge'>
+              <SelectBox name='options' options={tokens} handleOption={handleToken}>
+                <Arrow direction='down' paint='#4661E6' />
               </SelectBox>
             </InputRow>
-            <InputRow
-              title="Amount"
-              description="Input the amount you would like to bridge"
-            >
+            <InputRow title='Amount' description='Input the amount you would like to bridge'>
               <Input
-                id="amount"
-                name="amount"
+                id='amount'
+                name='amount'
                 onBlur={handleAmountBlur}
                 onChange={handleAmount}
-                error={
-                  !formState.amount.isValid && formState.amount.touched
-                    ? true
-                    : false
-                }
+                error={!formState.amount.isValid && formState.amount.touched ? true : false}
                 defaultValue={formState.amount.value}
               />
             </InputRow>
-            <InputRow
-              title="From"
-              description="Select the network you want to bridge from"
-            >
-              <SelectBox
-                name="options"
-                options={dynamicNetworks}
-                handleOption={handleFrom}
-              >
-                <Arrow direction="down" paint="#4661E6" />
+            <InputRow title='From' description='Select the network you want to bridge from'>
+              <SelectBox name='options' options={dynamicNetworks} handleOption={handleFrom}>
+                <Arrow direction='down' paint='#4661E6' />
               </SelectBox>
             </InputRow>
-            <InputRow
-              title="To"
-              description="Select the network you want to bridge to"
-            >
-              <SelectBox
-                name="options"
-                options={dynamicNetworks}
-                handleOption={handleTo}
-              >
-                <Arrow direction="down" paint="#4661E6" />
+            <InputRow title='To' description='Select the network you want to bridge to'>
+              <SelectBox name='options' options={dynamicNetworks} handleOption={handleTo}>
+                <Arrow direction='down' paint='#4661E6' />
               </SelectBox>
             </InputRow>
           </Container>
@@ -300,38 +271,20 @@ const Bridge = () => {
             {connected ? (
               <>
                 <ButtonWrapper>
-                  <Button
-                    className={classes.level_4}
-                    kind="default"
-                    type="button"
-                    paint="#D73737"
-                    onClick={disconnect}
-                  >
-                    Disconnect (${account})
+                  <Button className={classes.level_4} kind='default' type='button' paint='#D73737' onClick={disconnect}>
+                    Disconnect
                   </Button>
                 </ButtonWrapper>
 
                 <Container>
-                  <Button
-                    className={classes.level_4}
-                    kind="default"
-                    paint="#AD1FEA"
-                    type="button"
-                    onClick={transfer}
-                  >
+                  <Button className={classes.level_4} kind='default' paint='#AD1FEA' type='button' onClick={transfer}>
                     Transfer
                   </Button>
                 </Container>
               </>
             ) : (
               <Container>
-                <Button
-                  className={classes.level_4}
-                  kind="default"
-                  type="button"
-                  onClick={connect}
-                  paint="#3A4374"
-                >
+                <Button className={classes.level_4} kind='default' type='button' onClick={connect} paint='#3A4374'>
                   Connect Wallet
                 </Button>
               </Container>
