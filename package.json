@@ -11,8 +11,11 @@
   },
   "dependencies": {
     "@apollo/react-hooks": "^4.0.0",
+    "@ethersproject/bytes": "^5.7.0",
+    "@ethersproject/hash": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
-    "@metamask/sdk-react": "^0.14.1",
+    "@ethersproject/transactions": "^5.7.0",
+    "@metamask/sdk-react": "^0.14.2",
     "apollo-boost": "^0.4.9",
     "axios": "^1.6.1",
     "cuid": "^3.0.0",
