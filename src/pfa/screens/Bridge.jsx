@@ -8,11 +8,7 @@ import Button from "../components/UI/Button";
 import Input from "../components/UI/Input";
 import SelectBox from "../components/UI/SelectBox";
 import Container from "../components/Container";
-import { defaultAbiCoder } from "@ethersproject/abi";
-import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 import { useSDK } from "@metamask/sdk-react";
-import { recoverAddress } from "@ethersproject/transactions";
-import { _TypedDataEncoder as typedDataEncoder } from "@ethersproject/hash";
 import { Web3Provider } from "@ethersproject/providers";
 import { Contract } from "@ethersproject/contracts";
 import rTokenInfo from "../../artifacts/contracts/rToken.sol/rToken.json";
@@ -53,26 +49,22 @@ const TOKENS = [{ label: "USDC", address: "0x5fbdb2315678afecb367f032d93f642f641
 const ROLLUPS = [
   {
     label: "Radius",
-    rollupId: "radius",
+    rollupId: 31337,
     bundleContractAddress: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
   },
   {
     label: "Avail",
-    rollupId: "avail",
+    rollupId: 31337,
     bundleContractAddress: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
   },
 ];
 
 const Bridge = () => {
   const [account, setAccount] = useState(localStorage.getItem("account"));
-  const { sdk, connected, connecting, chainId, provider } = useSDK(); // provider
+  const { sdk, connected, connecting, provider } = useSDK(); // provider
+  const [dynamicRollups, setDynamicRollups] = useState(ROLLUPS);
 
   const MODAL_TITLE = "Radius Bridge";
-
-  const USER_TX_TYPE_HASH = ethers.solidityPackedKeccak256(
-    ["string"],
-    ["UserTx(address to,uint256 value,bytes data,uint256 nonce)"]
-  );
 
   useEffect(() => {
     async function connect() {
@@ -85,6 +77,13 @@ const Bridge = () => {
 
     connect();
   }, []);
+
+  useEffect(() => {
+    const storedAccount = localStorage.getItem("account");
+    if (storedAccount && !connected && !connecting) {
+      connect();
+    }
+  }, [connected, connecting]);
 
   const connect = async () => {
     try {
@@ -106,15 +105,6 @@ const Bridge = () => {
       console.warn("failed to disconnect..", err);
     }
   };
-
-  useEffect(() => {
-    const storedAccount = localStorage.getItem("account");
-    if (storedAccount && !connected && !connecting) {
-      connect();
-    }
-  }, [connected, connecting]);
-
-  const [dynamicRollups, setDynamicRollups] = useState(ROLLUPS);
 
   const formReducer = (state, action) => {
     if (action.type === "AMOUNT_INPUT") {
@@ -196,11 +186,13 @@ const Bridge = () => {
     dispatchForm({ type: "TO_SELECT", val: selectedRollup });
   };
 
+  // -----------------------------------------------------------------
+
   async function getLibrary(provider) {
-    return new Web3Provider(provider); // From @ethersproject/providers
+    return new Web3Provider(provider);
   }
 
-  const transfer = async (event) => {
+  async function transfer(event) {
     event.preventDefault();
     dispatchForm({ type: "AMOUNT_TOUCH", val: true });
     dispatchForm({ type: "DETAILS_TOUCH", val: true });
@@ -218,56 +210,30 @@ const Bridge = () => {
 
     const fromUserNonce = await fromBundlerContract.nonces(account);
 
-    // TODO: use this code but it doesn't work now
-    // const eip712Domain = await bundler.eip712Domain();
-
-    const fromEIP712Domain = {
-      chainId: 31337, // eip712Domain[3],
-      name: "Bundler",
-      verifyingContract: fromBundlerAddress,
-      version: "1",
-    };
-
-    const fromTypes = {
-      EIP712Domain: [
-        { name: "name", type: "string" },
-        { name: "version", type: "string" },
-        { name: "chainId", type: "uint256" },
-        { name: "verifyingContract", type: "address" },
-      ],
-      UserTx: [
-        { name: "to", type: "address" },
-        { name: "value", type: "uint256" },
-        { name: "data", type: "bytes" },
-        { name: "nonce", type: "uint256" },
-      ],
-    };
-
+    // TODO: check maxGasPrice
     const fromUserTx = {
       to: fromRTokenAddress,
       value: 0,
       data: fromRTokenContract.interface.encodeFunctionData("burnFrom", [account, formState.amount.value]),
       nonce: fromUserNonce.toNumber(),
+      chainId: formState.from.rollupId,
+      maxGasPrice: 10, // TODO: check maxGasPrice
     };
-    leaves.push([makeHashStruct(fromUserTx)]);
-
-    const fromParams = {
-      domain: fromEIP712Domain,
-      message: fromUserTx,
-      primaryType: "UserTx",
-      types: fromTypes,
-    };
-
-    const fromUserTxSignature = await signTypedMessage(account, fromParams);
-
-    verifySignature(
-      account,
-      fromEIP712Domain,
-      {
-        UserTx: fromTypes.UserTx,
-      },
-      fromUserTx,
-      fromUserTxSignature
+    const fromEncodedTx = ethers.solidityPackedKeccak256(
+      ["bytes"],
+      [
+        ethers.solidityPacked(
+          ["uint256", "address", "uint256", "bytes", "uint256", "uint256"],
+          [
+            fromUserTx.nonce,
+            fromUserTx.to,
+            fromUserTx.value,
+            fromUserTx.data,
+            fromUserTx.chainId,
+            fromUserTx.maxGasPrice,
+          ]
+        ),
+      ]
     );
     // --------- From --------- end
 
@@ -281,161 +247,62 @@ const Bridge = () => {
 
     const toUserNonce = await toBundlerContract.nonces(account);
 
-    // TODO: use this code but it doesn't work now
-    // const eip712Domain = await bundler.eip712Domain();
-
-    const toEIP712Domain = {
-      chainId: 31337, // eip712Domain[3],
-      name: "Bundler",
-      verifyingContract: toBundlerAddress,
-      version: "1",
-    };
-
-    const toTypes = {
-      EIP712Domain: [
-        { name: "name", type: "string" },
-        { name: "version", type: "string" },
-        { name: "chainId", type: "uint256" },
-        { name: "verifyingContract", type: "address" },
-      ],
-      UserTx: [
-        { name: "to", type: "address" },
-        { name: "value", type: "uint256" },
-        { name: "data", type: "bytes" },
-        { name: "nonce", type: "uint256" },
-      ],
-    };
-
     const toUserTx = {
       to: toRTokenAddress,
       value: 0,
-      data: toRTokenContract.interface.encodeFunctionData("mint", [account, formState.amount.value]),
+      data: toRTokenContract.interface.encodeFunctionData("burnFrom", [account, formState.amount.value]),
       nonce: toUserNonce.toNumber(),
+      chainId: formState.to.rollupId,
+      maxGasPrice: 10,
     };
-    leaves.push([makeHashStruct(toUserTx)]);
-
-    const toParams = {
-      domain: toEIP712Domain,
-      message: toUserTx,
-      primaryType: "UserTx",
-      types: toTypes,
-    };
-
-    const toUserTxSignature = await signTypedMessage(account, toParams);
-
-    verifySignature(
-      account,
-      toEIP712Domain,
-      {
-        UserTx: toTypes.UserTx,
-      },
-      toUserTx,
-      toUserTxSignature
+    const toEncodedTx = ethers.solidityPackedKeccak256(
+      ["bytes"],
+      [
+        ethers.solidityPacked(
+          ["uint256", "address", "uint256", "bytes", "uint256", "uint256"],
+          [toUserTx.nonce, toUserTx.to, toUserTx.value, toUserTx.data, toUserTx.chainId, toUserTx.maxGasPrice]
+        ),
+      ]
     );
     // --------- To --------- end
 
-    generateTx(
-      account,
-      fromUserTx,
-      fromUserTxSignature,
-      toUserTx,
-      toUserTxSignature,
-      fromEIP712Domain,
-      toEIP712Domain,
-      leaves
-    );
-  };
+    const digest = ethers.solidityPackedKeccak256(["bytes"], [ethers.concat([fromEncodedTx, toEncodedTx])]);
+    const bundleTxSignature = await signMessage(account, digest);
 
-  // TODO: use this code but it doesn't work now
-  async function generateTx(
-    userAddress,
-    fromUserTx,
-    fromUserTxSignature,
-    toUserTx,
-    toUserTxSignature,
-    fromEIP712Domain,
-    toEIP712Domain,
-    leaves
-  ) {
-    const tree = createMerkleTree(leaves);
-
-    const BundleTypes = {
-      EIP712Domain: [
-        { name: "name", type: "string" },
-        { name: "version", type: "string" },
-        { name: "chainId", type: "uint256" },
-        { name: "verifyingContract", type: "address" },
-      ],
-      BundleRoot: [{ name: "root", type: "bytes32" }],
-    };
-
-    const fromParams = {
-      domain: fromEIP712Domain,
-      message: {
-        root: tree.root,
-      },
-      primaryType: "BundleRoot",
-      types: BundleTypes,
-    };
-
-    const fromBundleTxSignature = await signTypedMessage(userAddress, fromParams);
-
-    const fromTx = {
-      from: account,
-      to: fromUserTx.to,
-      value: fromUserTx.value,
-      data: fromUserTx.data,
-      gasLimit: 0,
-      gasPrice: 0,
-      txSig: fromUserTxSignature,
-      bundle_tx_merkle_path: makeProof(tree, makeHashStruct(fromUserTx)),
-      bundle_tx_root: tree.root,
-      bundle_tx_signature: fromBundleTxSignature,
-      revert_flag: false,
-    };
-
-    debugger;
-
-    // --------- To ---------
-    const toParams = {
-      domain: toEIP712Domain,
-      message: {
-        root: tree.root,
-      },
-      primaryType: "BundleRoot",
-      types: BundleTypes,
-    };
-
-    const toBundleTxSignature = await signTypedMessage(userAddress, toParams);
-
-    const toTx = {
-      from: account,
-      to: toUserTx.to,
-      value: toUserTx.value,
-      data: toUserTx.data,
-      gasLimit: 0,
-      gasPrice: 0,
-      txSig: toUserTxSignature,
-      bundle_tx_merkle_path: makeProof(tree, makeHashStruct(toUserTx)),
-      bundle_tx_root: tree.root,
-      bundle_tx_signature: toBundleTxSignature,
-      revert_flag: false,
-    };
-
-    console.log("fromTx", fromTx);
-    console.log("toTx", toTx);
+    verifySignature(account, digest, bundleTxSignature);
+    generateTx(account, fromUserTx, toUserTx, bundleTxSignature);
   }
 
-  async function signTypedMessage(address, params) {
+  function generateTx(userAddress, fromUserTx, toUserTx, bundleTxSignature) {
+    let fromBundleTx = {
+      from: userAddress,
+      userTxIdx: 0,
+      userTxs: [fromUserTx, toUserTx],
+      bundleTxSignature: bundleTxSignature,
+      revertFlag: false,
+    };
+
+    let toBundleTx = {
+      from: userAddress,
+      userTxIdx: 1,
+      userTxs: [fromUserTx, toUserTx],
+      bundleTxSignature: bundleTxSignature,
+      revertFlag: false,
+    };
+
+    console.log("fromBundleTx", fromBundleTx);
+    console.log("toBundleTx", toBundleTx);
+  }
+
+  async function signMessage(address, message) {
     let signature;
 
     return new Promise((resolve, reject) => {
       provider // Or window.ethereum if you don't support EIP-6963.
         .sendAsync(
           {
-            method: "eth_signTypedData_v4",
-            params: [address, params],
-            from: address,
+            method: "personal_sign",
+            params: [message, address],
           },
           function (err, result) {
             if (err) reject(err);
@@ -448,31 +315,12 @@ const Bridge = () => {
     });
   }
 
-  async function verifySignature(address, EIP712Domain, types, message, signature) {
-    const msgHash = typedDataEncoder.hash(EIP712Domain, types, message);
-
-    const recoveredAddress = recoverAddress(msgHash, signature);
+  async function verifySignature(address, message, signature) {
+    const recoveredAddress = ethers.verifyMessage(ethers.getBytes(message), signature);
 
     alert(recoveredAddress);
 
     return recoveredAddress == address;
-  }
-
-  function createMerkleTree(elements) {
-    return StandardMerkleTree.of(elements, ["bytes32"]);
-  }
-
-  function makeHashStruct(tx) {
-    const encodedData = defaultAbiCoder.encode(
-      ["bytes32", "address", "uint256", "bytes32", "uint256"],
-      [USER_TX_TYPE_HASH, tx.to, tx.value, ethers.solidityPackedKeccak256(["bytes"], [tx.data]), tx.nonce]
-    );
-    const hash = ethers.solidityPackedKeccak256(["bytes"], [encodedData]);
-    return hash;
-  }
-
-  function makeProof(tree, value) {
-    return tree.getProof([value]);
   }
 
   return (
