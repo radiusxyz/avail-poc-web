@@ -1,4 +1,5 @@
 import React, { useEffect, useReducer, useState } from "react";
+import styled from "styled-components";
 import classes from "./styles/CreateEditFeedback.module.css";
 import radius from "../assets/images/favicon1.png";
 import InputRow from "../components/InputRow";
@@ -18,16 +19,36 @@ import rTokenInfo from "../../artifacts/contracts/rToken.sol/rToken.json";
 import bundlerInfo from "../../artifacts/contracts/Bundler.sol/Bundler.json";
 import { splitSignature } from "@ethersproject/bytes";
 import { ethers } from "ethers";
-import {
-  ButtonWrapper,
-  Icon,
-  ModalTitle,
-  Wrapper,
-} from "./styles/CreateEditFeedbackStyles";
+import { ButtonWrapper, Icon, ModalTitle, Wrapper } from "./styles/CreateEditFeedbackStyles";
 
-const TOKENS = [
-  { label: "USDC", address: "0x5fbdb2315678afecb367f032d93f642f64180aa3" },
-];
+const StyledAccount = styled.span`
+  font-weight: 700;
+  z-index: 100;
+  font-size: 13px;
+  line-height: 19px;
+  padding: 10.5px 17px 10.5px 16px;
+  border: none;
+  box-shadow: rgb(0, 0, 0) -5px 5px;
+  border-radius: 0;
+  display: flex;
+  white-space: nowrap;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  color: #f2f4fe;
+  padding: 12.5px 25px 11.5px 24px;
+  background-color: #ad1fea;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 20.23px;
+  letter-spacing: -0.25px;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+`;
+
+const TOKENS = [{ label: "USDC", address: "0x5fbdb2315678afecb367f032d93f642f64180aa3" }];
 
 const ROLLUPS = [
   {
@@ -191,17 +212,9 @@ const Bridge = () => {
     const fromRTokenAddress = formState.token.address;
     const fromBundlerAddress = formState.from.bundleContractAddress;
 
-    const fromRTokenContract = new Contract(
-      fromRTokenAddress,
-      rTokenInfo.abi,
-      library.getSigner()
-    );
+    const fromRTokenContract = new Contract(fromRTokenAddress, rTokenInfo.abi, library.getSigner());
 
-    const fromBundlerContract = new Contract(
-      fromBundlerAddress,
-      bundlerInfo.abi,
-      library.getSigner()
-    );
+    const fromBundlerContract = new Contract(fromBundlerAddress, bundlerInfo.abi, library.getSigner());
 
     const fromUserNonce = await fromBundlerContract.nonces(account);
 
@@ -233,10 +246,7 @@ const Bridge = () => {
     const fromUserTx = {
       to: fromRTokenAddress,
       value: 0,
-      data: fromRTokenContract.interface.encodeFunctionData("burnFrom", [
-        account,
-        formState.amount.value,
-      ]),
+      data: fromRTokenContract.interface.encodeFunctionData("burnFrom", [account, formState.amount.value]),
       nonce: fromUserNonce.toNumber(),
     };
     leaves.push([makeHashStruct(fromUserTx)]);
@@ -265,17 +275,9 @@ const Bridge = () => {
     const toRTokenAddress = formState.token.address;
     const toBundlerAddress = formState.to.bundleContractAddress;
 
-    const toRTokenContract = new Contract(
-      toRTokenAddress,
-      rTokenInfo.abi,
-      library.getSigner()
-    );
+    const toRTokenContract = new Contract(toRTokenAddress, rTokenInfo.abi, library.getSigner());
 
-    const toBundlerContract = new Contract(
-      toBundlerAddress,
-      bundlerInfo.abi,
-      library.getSigner()
-    );
+    const toBundlerContract = new Contract(toBundlerAddress, bundlerInfo.abi, library.getSigner());
 
     const toUserNonce = await toBundlerContract.nonces(account);
 
@@ -307,10 +309,7 @@ const Bridge = () => {
     const toUserTx = {
       to: toRTokenAddress,
       value: 0,
-      data: toRTokenContract.interface.encodeFunctionData("mint", [
-        account,
-        formState.amount.value,
-      ]),
+      data: toRTokenContract.interface.encodeFunctionData("mint", [account, formState.amount.value]),
       nonce: toUserNonce.toNumber(),
     };
     leaves.push([makeHashStruct(toUserTx)]);
@@ -379,10 +378,7 @@ const Bridge = () => {
       types: BundleTypes,
     };
 
-    const fromBundleTxSignature = await signTypedMessage(
-      userAddress,
-      fromParams
-    );
+    const fromBundleTxSignature = await signTypedMessage(userAddress, fromParams);
 
     const fromTx = {
       from: account,
@@ -452,13 +448,7 @@ const Bridge = () => {
     });
   }
 
-  async function verifySignature(
-    address,
-    EIP712Domain,
-    types,
-    message,
-    signature
-  ) {
+  async function verifySignature(address, EIP712Domain, types, message, signature) {
     const msgHash = typedDataEncoder.hash(EIP712Domain, types, message);
 
     const recoveredAddress = recoverAddress(msgHash, signature);
@@ -475,13 +465,7 @@ const Bridge = () => {
   function makeHashStruct(tx) {
     const encodedData = defaultAbiCoder.encode(
       ["bytes32", "address", "uint256", "bytes32", "uint256"],
-      [
-        USER_TX_TYPE_HASH,
-        tx.to,
-        tx.value,
-        ethers.solidityPackedKeccak256(["bytes"], [tx.data]),
-        tx.nonce,
-      ]
+      [USER_TX_TYPE_HASH, tx.to, tx.value, ethers.solidityPackedKeccak256(["bytes"], [tx.data]), tx.nonce]
     );
     const hash = ethers.solidityPackedKeccak256(["bytes"], [encodedData]);
     return hash;
@@ -492,113 +476,75 @@ const Bridge = () => {
   }
 
   return (
-    <Container className={classes.level_0}>
-      <ModalTitle>{account}</ModalTitle>
-      <Container className={classes.level_1}>
-        <Wrapper>
-          <Icon>
-            <img width="64" src={radius} alt={`${radius}`} />
-          </Icon>
-          <ModalTitle>{MODAL_TITLE}</ModalTitle>
-          <Container className={classes.level_2}>
-            <InputRow
-              title="Token"
-              description="Select the asset you would like to bridge"
-            >
-              <SelectBox
-                name="options"
-                options={TOKENS}
-                handleOption={handleToken}
-              >
-                <Arrow direction="down" paint="#4661E6" />
-              </SelectBox>
-            </InputRow>
-            <InputRow
-              title="Amount"
-              description="Input the amount you would like to bridge"
-            >
-              <Input
-                id="amount"
-                name="amount"
-                onBlur={handleAmountBlur}
-                onChange={handleAmount}
-                error={
-                  !formState.amount.isValid && formState.amount.touched
-                    ? true
-                    : false
-                }
-                defaultValue={formState.amount.value}
-              />
-            </InputRow>
-            <InputRow
-              title="From"
-              description="Select the rollup you want to bridge from"
-            >
-              <SelectBox
-                name="options"
-                options={dynamicRollups}
-                handleOption={handleFrom}
-              >
-                <Arrow direction="down" paint="#4661E6" />
-              </SelectBox>
-            </InputRow>
-            <InputRow
-              title="To"
-              description="Select the rollup you want to bridge to"
-            >
-              <SelectBox
-                name="options"
-                options={dynamicRollups}
-                handleOption={handleTo}
-              >
-                <Arrow direction="down" paint="#4661E6" />
-              </SelectBox>
-            </InputRow>
-          </Container>
-          <Container className={classes.level_3}>
-            {connected ? (
-              <>
-                <ButtonWrapper>
-                  <Button
-                    className={classes.level_4}
-                    kind="default"
-                    type="button"
-                    paint="#D73737"
-                    onClick={disconnect}
-                  >
-                    Disconnect
-                  </Button>
-                </ButtonWrapper>
+    <>
+      <StyledAccount>{account ? account : "Not Connected"}</StyledAccount>
+      <Container className={classes.level_0}>
+        <Container className={classes.level_1}>
+          <Wrapper>
+            <Icon>
+              <img width='64' src={radius} alt={`${radius}`} />
+            </Icon>
+            <ModalTitle>{MODAL_TITLE}</ModalTitle>
+            <Container className={classes.level_2}>
+              <InputRow title='Token' description='Select the asset you would like to bridge'>
+                <SelectBox name='options' options={TOKENS} handleOption={handleToken}>
+                  <Arrow direction='down' paint='#4661E6' />
+                </SelectBox>
+              </InputRow>
+              <InputRow title='Amount' description='Input the amount you would like to bridge'>
+                <Input
+                  id='amount'
+                  name='amount'
+                  onBlur={handleAmountBlur}
+                  onChange={handleAmount}
+                  error={!formState.amount.isValid && formState.amount.touched ? true : false}
+                  defaultValue={formState.amount.value}
+                />
+              </InputRow>
+              <InputRow title='From' description='Select the rollup you want to bridge from'>
+                <SelectBox name='options' options={dynamicRollups} handleOption={handleFrom}>
+                  <Arrow direction='down' paint='#4661E6' />
+                </SelectBox>
+              </InputRow>
+              <InputRow title='To' description='Select the rollup you want to bridge to'>
+                <SelectBox name='options' options={dynamicRollups} handleOption={handleTo}>
+                  <Arrow direction='down' paint='#4661E6' />
+                </SelectBox>
+              </InputRow>
+            </Container>
+            <Container className={classes.level_3}>
+              {connected ? (
+                <>
+                  <ButtonWrapper>
+                    <Button
+                      className={classes.level_4}
+                      kind='default'
+                      type='button'
+                      paint='#D73737'
+                      onClick={disconnect}
+                    >
+                      Disconnect
+                    </Button>
+                  </ButtonWrapper>
 
+                  <Container>
+                    <Button className={classes.level_4} kind='default' paint='#AD1FEA' type='button' onClick={transfer}>
+                      Transfer
+                    </Button>
+                  </Container>
+                </>
+              ) : (
                 <Container>
-                  <Button
-                    className={classes.level_4}
-                    kind="default"
-                    paint="#AD1FEA"
-                    type="button"
-                    onClick={transfer}
-                  >
-                    Transfer
+                  <Button className={classes.level_4} kind='default' type='button' onClick={connect} paint='#3A4374'>
+                    Connect Wallet
                   </Button>
                 </Container>
-              </>
-            ) : (
-              <Container>
-                <Button
-                  className={classes.level_4}
-                  kind="default"
-                  type="button"
-                  onClick={connect}
-                  paint="#3A4374"
-                >
-                  Connect Wallet
-                </Button>
-              </Container>
-            )}
-          </Container>
-        </Wrapper>
+              )}
+            </Container>
+          </Wrapper>
+        </Container>
       </Container>
-    </Container>
+    </>
   );
 };
 
