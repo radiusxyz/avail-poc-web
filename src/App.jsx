@@ -1,19 +1,8 @@
 import "./index.css";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import TotalTxs from "./pages/TotalTxs";
 import BlockTxs from "./pages/BlockTxs";
 import RootLayout from "./pages/RootLayout";
 import Bridge from "./pfa/screens/Bridge";
-// import { ethers } from 'ethers';
-
-// (async () => {
-//   let addresses = [];
-//   for (let i = 0; i < 100; i++) {
-//     let wallet = ethers.Wallet.createRandom();
-//     addresses.push(wallet.address);
-//   }
-//   console.log(addresses);
-// })();
 
 const router = createBrowserRouter([
   {
