@@ -15,7 +15,6 @@ const InputTitle = styled.h4`
 `;
 const Description = styled.p`
   color: #647196;
-  margin-bottom: 16px;
   display: flex;
   white-space: pre;
   justify-content: flex-end;
@@ -28,6 +27,7 @@ const Description = styled.p`
 const TitleBalanceWrapper = styled.div`
   display: flex;
   justify-content: space-between;
+  margin-bottom: 16px;
 `;
 
 function formatBalance(balance) {
