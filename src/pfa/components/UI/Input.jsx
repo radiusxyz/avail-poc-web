@@ -21,6 +21,7 @@ function Input(props) {
         active={props.active}
         error={props.error}
         defaultValue={props.defaultValue}
+        placeholder='0.0'
       />
       {props.error && <StyledSpan>Can't be empty</StyledSpan>}
     </>
