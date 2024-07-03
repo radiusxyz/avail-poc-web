@@ -468,14 +468,13 @@ const Bridge = () => {
                   placeholder='Input the amount you would like to transfer'
                 />
               </InputRow>
-              {/* description='Select the rollup you want to transfer from' */}
-              <InputRow title='From'>
+
+              <InputRow title='From' balance={0}>
                 <SelectBox name='options' options={dynamicRollups} handleOption={handleFrom} placeholder='Select'>
                   <Arrow direction='down' paint='#4661E6' />
                 </SelectBox>
               </InputRow>
-              {/* description='Select the rollup you want to transfer to' */}
-              <InputRow title='To'>
+              <InputRow title='To' balance={1000}>
                 <SelectBox name='options' options={dynamicRollups} handleOption={handleTo} placeholder='Select'>
                   <Arrow direction='down' paint='#4661E6' />
                 </SelectBox>
