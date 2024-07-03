@@ -447,12 +447,17 @@ const Bridge = () => {
             </Icon>
             <ModalTitle>{MODAL_TITLE}</ModalTitle>
             <Container className={classes.level_2}>
-              <InputRow title='Token' description='Select the asset you would like to transfer'>
-                <SelectBox name='options' options={TOKENS} handleOption={handleToken}>
+              <InputRow title='Token'>
+                <SelectBox
+                  name='options'
+                  options={TOKENS}
+                  handleOption={handleToken}
+                  placeholder='Select the asset you would like to transfer'
+                >
                   <Arrow direction='down' paint='#4661E6' />
                 </SelectBox>
               </InputRow>
-              <InputRow title='Amount' description='Input the amount you would like to transfer'>
+              <InputRow title='Amount'>
                 <Input
                   id='amount'
                   name='amount'
@@ -460,43 +465,44 @@ const Bridge = () => {
                   onChange={handleAmount}
                   error={!formState.amount.isValid && formState.amount.touched ? true : false}
                   defaultValue={formState.amount.value}
+                  placeholder='Input the amount you would like to transfer'
                 />
               </InputRow>
               {/* description='Select the rollup you want to transfer from' */}
               <InputRow title='From'>
-                <SelectBox name='options' options={dynamicRollups} handleOption={handleFrom}>
+                <SelectBox name='options' options={dynamicRollups} handleOption={handleFrom} placeholder='Select'>
                   <Arrow direction='down' paint='#4661E6' />
                 </SelectBox>
               </InputRow>
               {/* description='Select the rollup you want to transfer to' */}
               <InputRow title='To'>
-                <SelectBox name='options' options={dynamicRollups} handleOption={handleTo}>
+                <SelectBox name='options' options={dynamicRollups} handleOption={handleTo} placeholder='Select'>
                   <Arrow direction='down' paint='#4661E6' />
                 </SelectBox>
               </InputRow>
             </Container>
             <Container className={classes.level_3}>
               {connected ? (
-                <>
-                  {/* <ButtonWrapper>
-                    <Button
-                      className={classes.level_4}
-                      kind='default'
-                      type='button'
-                      paint='#D73737'
-                      onClick={disconnect}
-                    >
-                      Disconnect
-                    </Button>
-                  </ButtonWrapper> */}
+                // <>
+                //   <ButtonWrapper>
+                //     <Button
+                //       className={classes.level_4}
+                //       kind='default'
+                //       type='button'
+                //       paint='#D73737'
+                //       onClick={disconnect}
+                //     >
+                //       Disconnect
+                //     </Button>
+                //   </ButtonWrapper>
 
-                  <Container>
-                    <Button className={classes.level_4} kind='default' paint='#AD1FEA' type='button' onClick={transfer}>
-                      Transfer
-                    </Button>
-                  </Container>
-                </>
+                <Container>
+                  <Button className={classes.level_4} kind='default' paint='#AD1FEA' type='button' onClick={transfer}>
+                    Transfer
+                  </Button>
+                </Container>
               ) : (
+                // </>
                 <Container>
                   <Button className={classes.level_4} kind='default' type='button' onClick={connect} paint='#3A4374'>
                     Connect Wallet

@@ -3,7 +3,7 @@ import { SelectBoxContainer, StyledSelectBox } from "./styles/StyledSelectBox";
 import OptionsContainer from "./OptionsContainer";
 
 const SelectBox = (props) => {
-  const [option, setOption] = useState("Click to select");
+  const [option, setOption] = useState(props.placeholder);
   const [isShown, setIsShown] = useState(false);
 
   const handleSelectBoxClick = () => {
