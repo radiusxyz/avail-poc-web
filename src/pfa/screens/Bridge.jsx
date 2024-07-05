@@ -49,14 +49,14 @@ const TOKENS = [{ label: "wUSDT", address: "0x3Ca8f9C04c7e3E1624Ac2008F92f6F366A
 const ROLLUPS = [
   {
     label: "Rollup A",
-    rollupId: "1",
+    rollupId: "A",
     chainId: 1001,
     bundleContractAddress: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
     providerUrl: "http://192.168.12.68:8123",
   },
   {
     label: "Rollup B",
-    rollupId: "2",
+    rollupId: "B",
     chainId: 1001,
     bundleContractAddress: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
     providerUrl: "http://192.168.12.201:8123",
@@ -68,7 +68,56 @@ const Bridge = () => {
   const { sdk, connected, connecting, provider } = useSDK(); // provider
   const [dynamicRollups, setDynamicRollups] = useState(ROLLUPS);
 
+  const [fromBalance, setFromBalance] = useState(undefined);
+  const [toBalance, setToBalance] = useState(undefined);
+
   const MODAL_TITLE = "Create your bundle transaction";
+
+  const updateBalance = async () => {
+    if (formState.token) {
+      const rTokenAddress = formState.token.address;
+
+      if (formState.from) {
+        let option = {
+          batchMaxCount: 2,
+        };
+
+        const fromRollupProvider = new ethers.JsonRpcProvider(formState.from.providerUrl, undefined, option);
+
+        const fromWallet = new ethers.Wallet(
+          "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+          fromRollupProvider
+        );
+
+        const rTokenContract = new ethers.Contract(rTokenAddress, rTokenInfo.abi, fromWallet);
+
+        let userBalance = await rTokenContract.balanceOf(account);
+
+        setFromBalance(Number(userBalance));
+      }
+
+      if (formState.to) {
+        let option = {
+          batchMaxCount: 2,
+        };
+
+        const toRollupProvider = new ethers.JsonRpcProvider(formState.to.providerUrl, undefined, option);
+
+        const toWallet = new ethers.Wallet(
+          "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+          toRollupProvider
+        );
+
+        const rTokenContract = new ethers.Contract(rTokenAddress, rTokenInfo.abi, toWallet);
+
+        let userBalance = await rTokenContract.balanceOf(account);
+
+        setToBalance(Number(userBalance));
+      }
+    }
+  };
+
+  setInterval(updateBalance, 1000);
 
   useEffect(() => {
     const handleAccountsChanged = (accounts) => {
@@ -389,25 +438,25 @@ const Bridge = () => {
 
     console.log(payload);
 
-    // try {
-    //   const response = await fetch(url, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(payload),
-    //   });
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    //   const data = await response.json();
+      const data = await response.json();
 
-    //   if (data.error) {
-    //     console.log(data.error);
-    //   } else {
-    //     console.log(data.result);
-    //   }
-    // } catch (err) {
-    //   console.log(err.message);
-    // }
+      if (data.error) {
+        console.log(data.error);
+      } else {
+        console.log(data.result);
+      }
+    } catch (err) {
+      console.log(err.message);
+    }
   }
 
   function signMessage(address, message) {
@@ -469,12 +518,12 @@ const Bridge = () => {
                 />
               </InputRow>
 
-              <InputRow title='From' balance={0}>
+              <InputRow title='From' balance={fromBalance}>
                 <SelectBox name='options' options={dynamicRollups} handleOption={handleFrom} placeholder='Select'>
                   <Arrow direction='down' paint='#4661E6' />
                 </SelectBox>
               </InputRow>
-              <InputRow title='To' balance={1000}>
+              <InputRow title='To' balance={toBalance}>
                 <SelectBox name='options' options={dynamicRollups} handleOption={handleTo} placeholder='Select'>
                   <Arrow direction='down' paint='#4661E6' />
                 </SelectBox>
