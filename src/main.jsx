@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 import { TxsProvider } from "./contexts/TxsContext.jsx";
-import Theme from "./pfa/Theme.jsx";
+import Theme from "./Theme.jsx";
 import { MetaMaskProvider } from "@metamask/sdk-react";
 
 document.getElementById("root") &&

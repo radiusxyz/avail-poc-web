@@ -1,7 +1,7 @@
 import "./index.css";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import RootLayout from "./pages/RootLayout";
-import Bridge from "./pfa/screens/Bridge";
+import Bridge from "./screens/Bridge";
 
 const router = createBrowserRouter([
   {
