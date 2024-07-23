@@ -20,7 +20,7 @@ const StyledInput = styled.input`
   }
 
   ${(props) =>
-    (props.error &&
+    (props.$error &&
       css`
         &:focus {
           outline: 1px solid #d73737;
@@ -30,7 +30,7 @@ const StyledInput = styled.input`
         }
         outline: 1px solid #d73737;
       `) ||
-    (props.active &&
+    (props.$active &&
       css`
         outline: 1px solid #4661e6;
       `)};

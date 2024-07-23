@@ -5,6 +5,10 @@ const FlexibleContainer = styled.div`
   display: ${(props) => (props.display ? props.display : "flex")};
 `;
 const Container = (props) => {
-  return <FlexibleContainer {...props}>{props.children}</FlexibleContainer>;
+  return (
+    <FlexibleContainer className={props.className} display={props.display}>
+      {props.children}
+    </FlexibleContainer>
+  );
 };
 export default Container;

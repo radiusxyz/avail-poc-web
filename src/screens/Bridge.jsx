@@ -388,26 +388,6 @@ const Bridge = () => {
     };
 
     console.log(payload);
-
-    // try {
-    //   const response = await fetch(url, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(payload),
-    //   });
-
-    //   const data = await response.json();
-
-    //   if (data.error) {
-    //     console.log(data.error);
-    //   } else {
-    //     console.log(data.result);
-    //   }
-    // } catch (err) {
-    //   console.log(err.message);
-    // }
   }
 
   function signMessage(address, message) {
@@ -463,7 +443,7 @@ const Bridge = () => {
                   name='amount'
                   onBlur={handleAmountBlur}
                   onChange={handleAmount}
-                  error={!formState.amount.isValid && formState.amount.touched ? true : false}
+                  $error={!formState.amount.isValid && formState.amount.touched ? true : false}
                   defaultValue={formState.amount.value}
                   placeholder='Input the amount you would like to transfer'
                 />
@@ -482,19 +462,6 @@ const Bridge = () => {
             </Container>
             <Container className={classes.level_3}>
               {connected ? (
-                // <>
-                //   <ButtonWrapper>
-                //     <Button
-                //       className={classes.level_4}
-                //       kind='default'
-                //       type='button'
-                //       paint='#D73737'
-                //       onClick={disconnect}
-                //     >
-                //       Disconnect
-                //     </Button>
-                //   </ButtonWrapper>
-
                 <Container>
                   <Button className={classes.level_4} kind='default' paint='#AD1FEA' type='button' onClick={transfer}>
                     Transfer

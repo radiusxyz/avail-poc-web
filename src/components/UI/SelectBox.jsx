@@ -15,8 +15,8 @@ const SelectBox = (props) => {
       <StyledSelectBox
         as='div'
         onClick={handleSelectBoxClick}
-        active={props.active || (!props.sortButton && isShown && true)}
-        isShown={isShown}
+        $active={props.active || (!props.sortButton && isShown && true)}
+        $isShown={isShown}
         kind={props.kind}
         sortButton={props.sortButton}
       >

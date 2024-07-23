@@ -7,19 +7,16 @@ const StyledButton = styled.button`
   display: flex;
   white-space: nowrap;
   text-align: center;
-  justify-content: ${(props) => (props.jc ? props.jc : "center")};
+  justify-content: ${(props) => (props.$jc ? props.$jc : "center")};
   align-items: center;
   gap: 15px;
-  color: ${(props) =>
-    (props.kind === "back" && props.paint === "transparent" && "#ffffff") ||
-    "#f2f4fe"};
-  padding: ${({ kind, theme }) =>
-    kind === "back" ? "0px" : "12.5px 25px 11.5px 24px"};
-  background-color: ${({ paint }) => paint};
+  color: ${(props) => (props.$kind === "back" && props.$paint === "transparent" && "#ffffff") || "#f2f4fe"};
+  padding: ${({ $kind, theme }) => ($kind === "back" ? "0px" : "12.5px 25px 11.5px 24px")};
+  background-color: ${({ $paint }) => $paint};
   ${({ theme }) => theme.typography.size14};
-  ${({ kind, paint, theme }) => theme.btns[kind]?.[paint]}
+  ${({ $kind, $paint, theme }) => theme.btns[$kind]?.[$paint]}
   ${(props) =>
-    props.active &&
+    props.$active &&
     css`
     opacity: 0.75;
     ${StyledArrow} {
@@ -31,7 +28,7 @@ const StyledButton = styled.button`
     ${({ theme }) => theme.typography.size13bold};
     padding: 10.5px 17px 10.5px 16px;
     ${(props) =>
-      props.kind === "back" &&
+      props.$kind === "back" &&
       css`
         padding: 0px 0px 3px 0px;
       `}};

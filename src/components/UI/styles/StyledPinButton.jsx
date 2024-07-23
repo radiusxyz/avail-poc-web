@@ -4,8 +4,7 @@ import StyledButton from "./StyledButton";
 
 const StyledPinButton = styled(StyledButton)`
   gap: ${(props) => (props.direction === "horizontal" ? "9.5px" : "8px")};
-  flex-direction: ${(props) =>
-    props.direction === "horizontal" ? "row" : "column"};
+  flex-direction: ${(props) => (props.direction === "horizontal" ? "row" : "column")};
   ${({ theme }) => theme.typography.size13}
   ${({ kind, theme }) => theme.btns[kind]}
   ${(props) =>

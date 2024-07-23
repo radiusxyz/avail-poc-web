@@ -18,8 +18,8 @@ function Input(props) {
         onBlur={props.onBlur}
         onChange={props.onChange}
         as={props.as}
-        active={props.active}
-        error={props.error}
+        $active={props.active}
+        $error={props.error}
         defaultValue={props.defaultValue}
         placeholder='0.0'
       />

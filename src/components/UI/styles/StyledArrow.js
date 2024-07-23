@@ -4,15 +4,15 @@ const StyledArrow = styled.svg`
   display: block;
   fill: none;
   stroke-width: 2;
-  color: ${(props) => props.paint};
+  color: ${(props) => props.$paint};
   width: 11px;
   height: 7px;
   transform: rotate(
     ${(props) =>
-      (props.direction === "up" && "0deg") ||
-      (props.direction === "right" && "90deg") ||
-      (props.direction === "left" && "-90deg") ||
-      (props.direction === "down" && "180deg")}
+      (props.$direction === "up" && "0deg") ||
+      (props.$direction === "right" && "90deg") ||
+      (props.$direction === "left" && "-90deg") ||
+      (props.$direction === "down" && "180deg")}
   );
 `;
 
