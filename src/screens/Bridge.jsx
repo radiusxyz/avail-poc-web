@@ -15,7 +15,7 @@ import rTokenInfo from "../artifacts/contracts/rToken.sol/rToken.json";
 import bundlerInfo from "../artifacts/contracts/Bundler.sol/Bundler.json";
 import { splitSignature } from "@ethersproject/bytes";
 import { ethers } from "ethers";
-import { ButtonWrapper, Icon, ModalTitle, Wrapper } from "./styles/CreateEditFeedbackStyles";
+import { Icon, ModalTitle, Wrapper } from "./styles/CreateEditFeedbackStyles";
 
 const StyledAccount = styled.span`
   font-weight: 700;
@@ -87,8 +87,8 @@ const Bridge = () => {
     const initMetaMask = async () => {
       // Check for already connected accounts
       try {
-        const accounts = await provider.request({ method: "eth_accounts" });
-        if (accounts.length > 0) {
+        const accounts = await provider?.request({ method: "eth_accounts" });
+        if (accounts?.length > 0) {
           handleAccountsChanged(accounts);
         } else if (connected) {
           // No accounts found, request access to get the account
