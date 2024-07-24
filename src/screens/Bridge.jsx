@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useState } from "react";
 import styled from "styled-components";
-import classes from "./styles/CreateEditFeedback.module.css";
+import classes from "./styles/Modal.module.css";
 import radius from "../assets/images/favicon1.png";
 import InputRow from "../components/InputRow";
 import Arrow from "../components/UI/Arrow";
@@ -15,7 +15,7 @@ import rTokenInfo from "../artifacts/contracts/rToken.sol/rToken.json";
 import bundlerInfo from "../artifacts/contracts/Bundler.sol/Bundler.json";
 import { splitSignature } from "@ethersproject/bytes";
 import { ethers } from "ethers";
-import { Icon, ModalTitle, Wrapper } from "./styles/CreateEditFeedbackStyles";
+import { Icon, ModalTitle, Wrapper } from "./styles/ModalStyles";
 
 const StyledAccount = styled.span`
   font-weight: 700;
