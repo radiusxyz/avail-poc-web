@@ -353,13 +353,65 @@ const Bridge = () => {
     fromUserTx.rawTxHash = ethers.solidityPackedKeccak256(["bytes"], [fromEncodedTx]);
     toUserTx.rawTxHash = ethers.solidityPackedKeccak256(["bytes"], [toEncodedTx]);
 
-    requestToSendEncryptedBundleTx(
-      account,
-      [formState.from.rollupId, formState.to.rollupId],
-      [JSON.stringify(fromUserTx), JSON.stringify(toUserTx)],
-      ["eth_bundle_tx", "eth_bundle_tx"],
-      bundleTxSignature
-    );
+    // 1. TODO: generate time lock puzzle
+    // const timeLockPuzzle = await generateTimeLockPuzzle(timeLockPuzzleParam);
+    /*
+    {
+      o: "..",
+      t: "..",
+      n: ".."
+    }
+    */
+
+    // 2. TODO: encrypt transactions (fromUserTx / toUserTx) -> JSON.stringify(fromUserTx) - raw data
+    // const encryptedFromUserTx = await encryptMessage(message, encryptionKey);
+    // const encryptedToUserTx = await encryptMessage(message, encryptionKey);
+
+    // 3. TODO: prove (1time: timelock puzzle / 2times; encryption)
+    // const encryptionProof = await generateEncryptionProof(
+    //   encryptionZkpParam,
+    //   encryptionProvingKey,
+    //   encryptionPublicInput,
+    //   encryptionSecretInput // - fromUserTx / toUserTx are diffent input (i.e., data: message)
+    // );
+
+    // 2. TODO: convert transaction (2 times)
+    let encrypted_tx = {
+      open_data: {
+        raw_tx_hash: "", // get from fromUserTx / toUserTx - empty ok (1,2)
+      },
+      encrypted_data: "sdfsf123123", // result of 2 (encrypted - encryptedFromUserTx / encryptedToUserTx)
+      pvde_zkp: {
+        public_input: {
+          r1: BigUint,
+          r2: BigUint,
+          z: BigUint,
+          o: BigUint,
+          k_two: BigUint,
+          k_hash_value: PoseidonHashValue,
+        },
+        time_lock_puzzle_proof: {},
+        encryption_proof: {},
+      },
+    };
+
+    let parameter = {
+      from: account,
+      rollup_id_list: [formState.from.rollupId, formState.to.rollupId],
+      encrypted_tx_list: [encrypted_tx1, encrypted_tx2],
+      time_lock_puzzle: timeLockPuzzle,
+      bundle_tx_signature: bundleTxSignature,
+    };
+
+    console.log(parameter);
+
+    // requestToSendEncryptedBundleTx(
+    //   account,
+    //   [formState.from.rollupId, formState.to.rollupId],
+    //   [JSON.stringify(fromUserTx), JSON.stringify(toUserTx)],
+    //   ["eth_bundle_tx", "eth_bundle_tx"],
+    //   bundleTxSignature
+    // );
   }
 
   async function requestToSendEncryptedBundleTx(
