@@ -17,6 +17,7 @@ import { splitSignature } from "@ethersproject/bytes";
 import { ethers } from "ethers";
 import { Icon, ModalTitle, Wrapper } from "./styles/ModalStyles";
 import { formReducer, initialFormState } from "../reducers/formReducer";
+import { TOKENS, ROLLUPS } from "../assets/database";
 
 const StyledAccount = styled.span`
   font-weight: 700;
@@ -44,25 +45,6 @@ const StyledAccount = styled.span`
   bottom: 20px;
   right: 20px;
 `;
-
-const TOKENS = [{ label: "wUSDT", address: "0x3Ca8f9C04c7e3E1624Ac2008F92f6F366A869444" }];
-
-const ROLLUPS = [
-  {
-    label: "Rollup A",
-    rollupId: "1",
-    chainId: 1001,
-    bundleContractAddress: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
-    providerUrl: "http://192.168.12.68:8123",
-  },
-  {
-    label: "Rollup B",
-    rollupId: "2",
-    chainId: 1001,
-    bundleContractAddress: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
-    providerUrl: "http://192.168.12.201:8123",
-  },
-];
 
 const Bridge = () => {
   const [account, setAccount] = useState(localStorage.getItem("account"));
@@ -170,9 +152,6 @@ const Bridge = () => {
     dispatchForm({ type: "AMOUNT_TOUCH", val: true });
     dispatchForm({ type: "DETAILS_TOUCH", val: true });
 
-    // const fromLibrary = getLibrary(fromProvider);
-    // const toLibrary = getLibrary(toProvider);
-
     // --------- From ---------
     const fromRTokenAddress = formState.token.address;
     const fromBundlerAddress = formState.from.bundleContractAddress;
@@ -182,34 +161,14 @@ const Bridge = () => {
     };
 
     const fromRollupProvider = new ethers.JsonRpcProvider(formState.from.providerUrl, undefined, option);
-    // const fromLibrary = getLibrary(fromRollupProvider);
-
-    // const fromRTokenContract = await ethers.getContractAt(rTokenInfo.abi, fromRTokenAddress, fromRollupProvider);
-    // const fromBundlerContract = await ethers.getContractAt(bundlerInfo.abi, fromBundlerAddress, fromRollupProvider);
-
-    // const fromRTokenContract = new Contract(fromRTokenAddress, rTokenInfo.abi, fromLibrary.getSigner());
-    // const fromBundlerContract = new Contract(fromBundlerAddress, bundlerInfo.abi, fromLibrary.getSigner());
 
     const fromWallet = new ethers.Wallet(
       "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
       fromRollupProvider
     );
 
-    // const fromRTokenContract = new ethers.Contract(fromRTokenAddress, rTokenInfo.abi, fromLibrary.getSigner());
-    // const fromBundlerContract = new ethers.Contract(fromBundlerAddress, bundlerInfo.abi, fromLibrary.getSigner());
-    // const rTokenContract = ethers.ContractFactory(rTokenInfo.abi, rTokenInfo.bytecode);
     const fromRTokenContract = new ethers.Contract(fromRTokenAddress, rTokenInfo.abi);
     const fromBundlerContract = new ethers.Contract(fromBundlerAddress, bundlerInfo.abi, fromWallet);
-
-    // const data = fromBundlerContract.interface.encodeFunctionData("nonces", [account]);
-
-    // const callData = {
-    //   to: fromBundlerAddress,
-    //   data: data,
-    // };
-
-    // const result = await fromRollupProvider.call(callData);
-    // console.log(result);
 
     const fromUserNonce = await fromBundlerContract.nonces(account);
 
@@ -257,9 +216,6 @@ const Bridge = () => {
     );
 
     const toRTokenContract = new Contract(toRTokenAddress, rTokenInfo.abi);
-
-    // const toBundlerContract = new Contract(toBundlerAddress, bundlerInfo.abi, toWallet);
-    // const toUserNonce = await toBundlerContract.nonces(account);
 
     const toUserNonce = fromUserNonce;
     const toRollupFeeData = await toRollupProvider.getFeeData();
