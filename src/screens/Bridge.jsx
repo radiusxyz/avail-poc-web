@@ -135,30 +135,28 @@ const Bridge = () => {
 
   const handleToken = (tokenName) => {
     const selectedToken = TOKENS.find((t) => t.label === tokenName);
-
-    dispatchForm({ type: "TOKEN_SELECT", val: selectedToken });
+    dispatchForm({ type: "UPDATE_FIELD", field: "token", value: selectedToken });
   };
 
   const handleAmount = (event) => {
-    dispatchForm({ type: "AMOUNT_INPUT", val: event.target.value.trim() });
+    const value = event.target.value.trim();
+    dispatchForm({ type: "UPDATE_AMOUNT", value });
   };
 
-  const handleAmountBlur = (event) => {
-    dispatchForm({ type: "AMOUNT_TOUCH", val: true });
+  const handleAmountBlur = () => {
+    dispatchForm({ type: "UPDATE_AMOUNT", touched: true });
   };
 
   const handleFrom = (from) => {
     const selectedRollup = ROLLUPS.find((rollup) => rollup.label === from);
-
     setDynamicRollups(ROLLUPS.filter((rollup) => rollup.label !== from));
-    dispatchForm({ type: "FROM_SELECT", val: selectedRollup });
+    dispatchForm({ type: "UPDATE_FIELD", field: "from", value: selectedRollup });
   };
 
   const handleTo = (to) => {
     const selectedRollup = ROLLUPS.find((rollup) => rollup.label === to);
-
     setDynamicRollups(ROLLUPS.filter((rollup) => rollup.label !== to));
-    dispatchForm({ type: "TO_SELECT", val: selectedRollup });
+    dispatchForm({ type: "UPDATE_FIELD", field: "to", value: selectedRollup });
   };
 
   // -----------------------------------------------------------------

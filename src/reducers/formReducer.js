@@ -11,40 +11,22 @@ export const initialFormState = {
 
 export const formReducer = (state, action) => {
   switch (action.type) {
-    case "AMOUNT_INPUT":
+    case "UPDATE_FIELD":
       return {
         ...state,
-        amount: {
-          value: action.val,
-          isValid: action.val.length !== 0,
-          touched: true,
-        },
+        [action.field]: action.value,
       };
 
-    case "AMOUNT_VALID":
-      return {
-        ...state,
-        amount: { ...state.amount, isValid: action.val },
-      };
-
-    case "AMOUNT_TOUCH":
+    case "UPDATE_AMOUNT":
       return {
         ...state,
         amount: {
           ...state.amount,
-          isValid: !(action.val && state.amount.value === ""),
-          touched: action.val,
+          value: action.value,
+          isValid: action.value?.length !== 0,
+          touched: action.touched ?? state.amount.touched,
         },
       };
-
-    case "TOKEN_SELECT":
-      return { ...state, token: action.val };
-
-    case "FROM_SELECT":
-      return { ...state, from: action.val };
-
-    case "TO_SELECT":
-      return { ...state, to: action.val };
 
     default:
       return state;
