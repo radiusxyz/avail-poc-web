@@ -16,6 +16,7 @@ import bundlerInfo from "../artifacts/contracts/Bundler.sol/Bundler.json";
 import { splitSignature } from "@ethersproject/bytes";
 import { ethers } from "ethers";
 import { Icon, ModalTitle, Wrapper } from "./styles/ModalStyles";
+import { formReducer, initialFormState } from "../reducers/formReducer";
 
 const StyledAccount = styled.span`
   font-weight: 700;
@@ -68,8 +69,6 @@ const Bridge = () => {
   const { sdk, connected, connecting, provider } = useSDK(); // provider
   const [dynamicRollups, setDynamicRollups] = useState(ROLLUPS);
 
-  const MODAL_TITLE = "Create your bundle transaction";
-
   useEffect(() => {
     const handleAccountsChanged = (accounts) => {
       if (accounts.length > 0) {
@@ -87,7 +86,7 @@ const Bridge = () => {
     const initMetaMask = async () => {
       // Check for already connected accounts
       try {
-        const accounts = await provider?.request({ method: "eth_accounts" });
+        const accounts = await provider?.request({ method: "eth_requestAccounts" });
         if (accounts?.length > 0) {
           handleAccountsChanged(accounts);
         } else if (connected) {
@@ -132,57 +131,7 @@ const Bridge = () => {
     }
   };
 
-  const formReducer = (state, action) => {
-    if (action.type === "AMOUNT_INPUT") {
-      return {
-        ...state,
-        amount: {
-          value: action.val,
-          isValid: action.val.length !== 0,
-          touched: true,
-        },
-      };
-    }
-
-    if (action.type === "AMOUNT_VALID") {
-      return {
-        ...state,
-        amount: { ...state.amount, isValid: action.val },
-      };
-    }
-
-    if (action.type === "AMOUNT_TOUCH") {
-      return {
-        ...state,
-        amount: {
-          ...state.amount,
-          isValid: !(action.val && state.amount.value === ""),
-          touched: action.val,
-        },
-      };
-    }
-    if (action.type === "TOKEN_SELECT") {
-      return { ...state, token: action.val };
-    }
-    if (action.type === "FROM_SELECT") {
-      return { ...state, from: action.val };
-    }
-    if (action.type === "TO_SELECT") {
-      return { ...state, to: action.val };
-    }
-    return { ...state };
-  };
-
-  const [formState, dispatchForm] = useReducer(formReducer, {
-    token: null,
-    amount: {
-      value: "",
-      isValid: false,
-      touched: false,
-    },
-    from: null,
-    to: null,
-  });
+  const [formState, dispatchForm] = useReducer(formReducer, initialFormState);
 
   const handleToken = (tokenName) => {
     const selectedToken = TOKENS.find((t) => t.label === tokenName);
@@ -477,7 +426,7 @@ const Bridge = () => {
             <Icon>
               <img width='64' src={radius} alt={`${radius}`} />
             </Icon>
-            <ModalTitle>{MODAL_TITLE}</ModalTitle>
+            <ModalTitle>Create your bundle transaction</ModalTitle>
             <Container className={classes.level_2}>
               <InputRow title='Token'>
                 <SelectBox
