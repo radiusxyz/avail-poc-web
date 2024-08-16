@@ -8,9 +8,7 @@ import Button from "../components/UI/Button";
 import Input from "../components/UI/Input";
 import SelectBox from "../components/UI/SelectBox";
 import Container from "../components/Container";
-import { useSDK } from "@metamask/sdk-react";
-import { Web3Provider } from "@ethersproject/providers";
-import { Contract } from "@ethersproject/contracts";
+
 import rTokenInfo from "../artifacts/contracts/rToken.sol/rToken.json";
 import bundlerInfo from "../artifacts/contracts/Bundler.sol/Bundler.json";
 import { splitSignature } from "@ethersproject/bytes";
@@ -18,6 +16,7 @@ import { ethers } from "ethers";
 import { Icon, ModalTitle, Wrapper } from "./styles/ModalStyles";
 import { formReducer, initialFormState } from "../reducers/formReducer";
 import { TOKENS, ROLLUPS } from "../assets/database";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 
 const StyledAccount = styled.span`
   font-weight: 700;
@@ -47,71 +46,10 @@ const StyledAccount = styled.span`
 `;
 
 const Bridge = () => {
-  const [account, setAccount] = useState(localStorage.getItem("account"));
-  const { sdk, connected, connecting, provider } = useSDK(); // provider
   const [dynamicRollups, setDynamicRollups] = useState(ROLLUPS);
 
-  useEffect(() => {
-    const handleAccountsChanged = (accounts) => {
-      if (accounts.length > 0) {
-        // Update with the first account since we're assuming only one
-        const newAccount = accounts[0];
-        setAccount(newAccount);
-        localStorage.setItem("account", newAccount);
-      } else {
-        // Handle account disconnection
-        setAccount(null);
-        localStorage.removeItem("account");
-      }
-    };
-
-    const initMetaMask = async () => {
-      // Check for already connected accounts
-      try {
-        const accounts = await provider?.request({ method: "eth_requestAccounts" });
-        if (accounts?.length > 0) {
-          handleAccountsChanged(accounts);
-        } else if (connected) {
-          // No accounts found, request access to get the account
-          const requestedAccounts = await provider.request({ method: "eth_requestAccounts" });
-          handleAccountsChanged(requestedAccounts);
-        }
-      } catch (error) {
-        console.error("Error while trying to retrieve accounts:", error);
-      }
-    };
-
-    initMetaMask();
-
-    // Listen to account changes
-    provider?.on("accountsChanged", handleAccountsChanged);
-
-    // Clean up the event listener when the component unmounts
-    return () => {
-      provider?.removeListener("accountsChanged", handleAccountsChanged);
-    };
-  }, [provider, connected]);
-
-  const connect = async () => {
-    try {
-      const accounts = await sdk?.connect();
-      const account = accounts?.[0];
-      setAccount(account);
-      localStorage.setItem("account", account);
-    } catch (err) {
-      console.warn("failed to connect..", err);
-    }
-  };
-
-  const disconnect = async () => {
-    try {
-      sdk?.disconnect();
-      setAccount(undefined);
-      localStorage.removeItem("account");
-    } catch (err) {
-      console.warn("failed to disconnect..", err);
-    }
-  };
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
 
   const [formState, dispatchForm] = useReducer(formReducer, initialFormState);
 
@@ -143,118 +81,163 @@ const Bridge = () => {
 
   // -----------------------------------------------------------------
 
-  function getLibrary(provider) {
-    return new Web3Provider(provider);
-  }
-
   async function transfer(event) {
     event.preventDefault();
     dispatchForm({ type: "AMOUNT_TOUCH", val: true });
     dispatchForm({ type: "DETAILS_TOUCH", val: true });
 
-    // --------- From ---------
-    const fromRTokenAddress = formState.token.address;
-    const fromBundlerAddress = formState.from.bundleContractAddress;
-
     let option = {
       batchMaxCount: 2,
     };
 
-    const fromRollupProvider = new ethers.JsonRpcProvider(formState.from.providerUrl, undefined, option);
+    const bridgeOperation = {
+      rTokenAddress: {
+        from: formState.token.address,
+        to: formState.token.address,
+      },
+      bundlerAddress: {
+        from: formState.from.bundleContractAddress,
+        to: formState.to.bundleContractAddress,
+      },
 
-    const fromWallet = new ethers.Wallet(
-      "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
-      fromRollupProvider
-    );
+      rollupProvider: {
+        from: new ethers.JsonRpcProvider(formState.from.providerUrl, undefined, option),
+        to: new ethers.JsonRpcProvider(formState.to.providerUrl, undefined, option),
+      },
 
-    const fromRTokenContract = new ethers.Contract(fromRTokenAddress, rTokenInfo.abi);
-    const fromBundlerContract = new ethers.Contract(fromBundlerAddress, bundlerInfo.abi, fromWallet);
+      wallet: {
+        get from() {
+          return new ethers.Wallet(
+            "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+            this.rollupProvider.from
+          );
+        },
+        get to() {
+          return new ethers.Wallet(
+            "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+            this.rollupProvider.to
+          );
+        },
+      },
 
-    const fromUserNonce = await fromBundlerContract.nonces(account);
+      rTokenContract: {
+        get from() {
+          return new ethers.Contract(this.rTokenAddress.from, rTokenInfo.abi, this.wallet.from);
+        },
+        get to() {
+          return new ethers.Contract(this.rTokenAddress.to, rTokenInfo.abi, this.wallet.to);
+        },
+      },
 
-    const fromRollupFeeData = await fromRollupProvider.getFeeData();
+      bundlerContract: {
+        get from() {
+          return new ethers.Contract(this.bundlerAddress.from, bundlerInfo.abi, this.wallet.from);
+        },
+        get to() {
+          return new ethers.Contract(this.bundlerAddress.to, bundlerInfo.abi, this.wallet.to);
+        },
+      },
+      // async
+      userNonce: {
+        get from() {
+          return this.bundlerContract.from.nonces(account);
+        },
+        get to() {
+          return this.bundlerContract.to.nonces(account);
+        },
+      },
+      // async
+      rollupFeeData: {
+        get from() {
+          return this.rollupProvider.from.getFeeData();
+        },
+        get to() {
+          return this.rollupProvider.to.getFeeData();
+        },
+      },
+      userTx: {
+        get from() {
+          return {
+            to: this.rTokenAddress.from,
+            value: 0,
+            data: this.rTokenContract.from.interface.encodeFunctionData("burnFrom", [account, formState.amount.value]),
+            nonce: Number(this.userNonce.from),
+            chainId: formState.from.chainId,
+            maxGasPrice: Number(this.rollupFeeData.from.gasPrice * 2n),
+          };
+        },
+        get to() {
+          return {
+            to: this.rTokenAddress.to,
+            value: 0,
+            data: this.rTokenContract.to.interface.encodeFunctionData("mint", [account, formState.amount.value]),
+            nonce: Number(this.userNonce.to),
+            chainId: formState.to.chainId,
+            maxGasPrice: Number(this.rollupFeeData.to.gasPrice * 2n),
+          };
+        },
+      },
 
-    const fromUserTx = {
-      to: fromRTokenAddress,
-      value: 0,
-      data: fromRTokenContract.interface.encodeFunctionData("burnFrom", [account, formState.amount.value]),
-      nonce: Number(fromUserNonce),
-      chainId: formState.from.chainId,
-      maxGasPrice: Number(fromRollupFeeData.gasPrice * 2n),
+      encodedTx: {
+        get from() {
+          return ethers.solidityPackedKeccak256(
+            ["bytes"],
+            [
+              ethers.solidityPacked(
+                ["uint256", "address", "uint256", "bytes", "uint256", "uint256"],
+                [
+                  this.userTx.from.nonce,
+                  this.userTx.from.to,
+                  this.userTx.from.value,
+                  this.userTx.from.data,
+                  this.userTx.from.chainId,
+                  this.userTx.from.maxGasPrice,
+                ]
+              ),
+            ]
+          );
+        },
+        get to() {
+          return ethers.solidityPackedKeccak256(
+            ["bytes"],
+            [
+              ethers.solidityPacked(
+                ["uint256", "address", "uint256", "bytes", "uint256", "uint256"],
+                [
+                  this.userTx.to.nonce,
+                  this.userTx.to.to,
+                  this.userTx.to.value,
+                  this.userTx.to.data,
+                  this.userTx.to.chainId,
+                  this.userTx.to.maxGasPrice,
+                ]
+              ),
+            ]
+          );
+        },
+      },
+      rawTxHash: {
+        get from() {
+          return ethers.solidityPackedKeccak256(["bytes"], [this.encodedTx.from]);
+        },
+        get to() {
+          return ethers.solidityPackedKeccak256(["bytes"], [this.encodedTx.to]);
+        },
+      },
+      get digest() {
+        return ethers.solidityPackedKeccak256(["bytes"], [ethers.concat([this.encodedTx.from, this.encodedTx.to])]);
+      },
+      // async
+      get bundleTxSignature() {
+        return signMessage(account, this.digest);
+      },
+
+      get signature() {
+        return splitSignature(this.bundleTxSignature);
+      },
     };
-
-    console.log("fromUserTx", account, formState.amount.value);
-
-    const fromEncodedTx = ethers.solidityPackedKeccak256(
-      ["bytes"],
-      [
-        ethers.solidityPacked(
-          ["uint256", "address", "uint256", "bytes", "uint256", "uint256"],
-          [
-            fromUserTx.nonce,
-            fromUserTx.to,
-            fromUserTx.value,
-            fromUserTx.data,
-            fromUserTx.chainId,
-            fromUserTx.maxGasPrice,
-          ]
-        ),
-      ]
-    );
-    // --------- From --------- end
-
-    // --------- To ---------
-    const toRollupProvider = new ethers.JsonRpcProvider(formState.to.providerUrl, undefined, option);
-    // const toLibrary = getLibrary(toRollupProvider);
-
-    const toRTokenAddress = formState.token.address;
-    const toBundlerAddress = formState.to.bundleContractAddress;
-
-    const toWallet = new ethers.Wallet(
-      "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
-      toRollupProvider
-    );
-
-    const toRTokenContract = new Contract(toRTokenAddress, rTokenInfo.abi);
-
-    const toUserNonce = fromUserNonce;
-    const toRollupFeeData = await toRollupProvider.getFeeData();
-
-    const toUserTx = {
-      to: toRTokenAddress,
-      value: 0,
-      data: toRTokenContract.interface.encodeFunctionData("mint", [account, formState.amount.value]),
-      nonce: Number(toUserNonce),
-      chainId: formState.to.chainId,
-      maxGasPrice: Number(toRollupFeeData.gasPrice * 2n),
-    };
-
-    console.log("toUserTx", account, formState.amount.value);
-
-    const toEncodedTx = ethers.solidityPackedKeccak256(
-      ["bytes"],
-      [
-        ethers.solidityPacked(
-          ["uint256", "address", "uint256", "bytes", "uint256", "uint256"],
-          [toUserTx.nonce, toUserTx.to, toUserTx.value, toUserTx.data, toUserTx.chainId, toUserTx.maxGasPrice]
-        ),
-      ]
-    );
-    // --------- To --------- end
-
-    const digest = ethers.solidityPackedKeccak256(["bytes"], [ethers.concat([fromEncodedTx, toEncodedTx])]);
-
-    const bundleTxSignature = await signMessage(account, digest);
-
-    let signature = splitSignature(bundleTxSignature);
-
-    console.log(bundleTxSignature);
-    console.log(signature);
 
     verifySignature(account, digest, bundleTxSignature);
-
-    fromUserTx.rawTxHash = ethers.solidityPackedKeccak256(["bytes"], [fromEncodedTx]);
-    toUserTx.rawTxHash = ethers.solidityPackedKeccak256(["bytes"], [toEncodedTx]);
 
     // 1. TODO: generate time lock puzzle
     // const timeLockPuzzle = await generateTimeLockPuzzle(timeLockPuzzleParam);
@@ -373,7 +356,7 @@ const Bridge = () => {
 
   return (
     <>
-      <StyledAccount>{account ? account : "Not Connected"}</StyledAccount>
+      <StyledAccount>{isConnected ? address : "Not Connected"}</StyledAccount>
       <Container className={classes.level_0}>
         <Container className={classes.level_1}>
           <Wrapper>
@@ -416,7 +399,7 @@ const Bridge = () => {
               </InputRow>
             </Container>
             <Container className={classes.level_3}>
-              {connected ? (
+              {isConnected ? (
                 <Container>
                   <Button className={classes.level_4} kind='default' paint='#AD1FEA' type='button' onClick={transfer}>
                     Transfer
