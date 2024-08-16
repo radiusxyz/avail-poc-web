@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
-import { TxsProvider } from "./contexts/TxsContext.jsx";
+import { PvdeProvider } from "./contexts/PvdeContext.jsx";
 import Theme from "./Theme.jsx";
 import { MetaMaskProvider } from "@metamask/sdk-react";
 
@@ -10,7 +10,7 @@ document.getElementById("root") &&
   ReactDOM.createRoot(document.getElementById("root")).render(
     <React.StrictMode>
       <Theme>
-        <TxsProvider>
+        <PvdeProvider>
           <MetaMaskProvider
             debug={false}
             sdkOptions={{
@@ -22,7 +22,7 @@ document.getElementById("root") &&
           >
             <App />
           </MetaMaskProvider>
-        </TxsProvider>
+        </PvdeProvider>
       </Theme>
     </React.StrictMode>
   );

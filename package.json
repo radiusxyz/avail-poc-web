@@ -31,7 +31,8 @@
     "react-dom": "^18.2.0",
     "react-router": "^6.20.1",
     "react-router-dom": "^6.20.1",
-    "styled-components": "^6.1.1"
+    "styled-components": "^6.1.1",
+    "pvde": "https://github.com/radiusxyz/pvde.js"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",
