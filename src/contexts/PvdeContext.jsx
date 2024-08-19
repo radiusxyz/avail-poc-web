@@ -1,14 +1,4 @@
 import React, { createContext, useEffect, useState } from "react";
-import {
-  fetchTimeLockPuzzleZkpParam,
-  fetchTimeLockPuzzleProvingKey,
-  generateTimeLockPuzzleParam,
-  generateTimeLockPuzzle,
-  generateTimeLockPuzzleProof,
-  fetchEncryptionZkpParam,
-  fetchEncryptionProvingKey,
-  generateSymmetricKey,
-} from "pvde";
 
 export const PvdeContext = createContext({
   timeLockPuzzle: "",
@@ -34,35 +24,39 @@ export const PvdeProvider = ({ children }) => {
   const [encryptionKey, setEncryptionKey] = useState("");
 
   useEffect(() => {
-    const paramFetcher = async () => {
-      const tlpParam = await generateTimeLockPuzzleParam(2048);
-      const tlp = await generateTimeLockPuzzle(tlpParam);
-      const [tlpSecretInput, tlpPublicInput] = tlp;
-      const tlpZkpParam = await fetchTimeLockPuzzleZkpParam();
-      const tlpProvingKey = await fetchTimeLockPuzzleProvingKey();
-      const tlpProof = await generateTimeLockPuzzleProof(
-        tlpZkpParam,
-        tlpProvingKey,
-        tlpPublicInput,
-        tlpSecretInput,
-        tlpParam
-      );
-      const encKey = await generateSymmetricKey(tlpSecretInput.k);
-      const encZkpParam = await fetchEncryptionZkpParam();
-      const encProvingKey = await fetchEncryptionProvingKey();
+    // Specify the worker type as "module"
+    const worker = new Worker(new URL("../pvdeWorker.js", import.meta.url), {
+      type: "module",
+    });
 
-      setTimeLockPuzzleParam(tlpParam);
-      setTimeLockPuzzle(tlp);
-      setTimeLockPuzzleZkpParam(tlpZkpParam);
-      setTimeLockPuzzleProvingKey(tlpProvingKey);
-      setTimeLockPuzzleProof(tlpProof);
+    worker.onmessage = (event) => {
+      const {
+        timeLockPuzzleParam,
+        timeLockPuzzle,
+        timeLockPuzzleZkpParam,
+        timeLockPuzzleProvingKey,
+        timeLockPuzzleProof,
+        encryptionKey,
+        encryptionZkpParam,
+        encryptionProvingKey,
+      } = event.data;
 
-      setEncryptionKey(encKey);
-      setEncryptionZkpParam(encZkpParam);
-      setEncryptionProvingKey(encProvingKey);
+      setTimeLockPuzzleParam(timeLockPuzzleParam);
+      setTimeLockPuzzle(timeLockPuzzle);
+      setTimeLockPuzzleZkpParam(timeLockPuzzleZkpParam);
+      setTimeLockPuzzleProvingKey(timeLockPuzzleProvingKey);
+      setTimeLockPuzzleProof(timeLockPuzzleProof);
+
+      setEncryptionKey(encryptionKey);
+      setEncryptionZkpParam(encryptionZkpParam);
+      setEncryptionProvingKey(encryptionProvingKey);
     };
 
-    paramFetcher();
+    worker.postMessage("start");
+
+    return () => {
+      worker.terminate();
+    };
   }, []);
 
   return (

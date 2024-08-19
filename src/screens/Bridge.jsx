@@ -87,7 +87,7 @@ const Bridge = () => {
     const initMetaMask = async () => {
       // Check for already connected accounts
       try {
-        const accounts = await provider?.request({ method: "eth_accounts" });
+        const accounts = await provider?.request({ method: "eth_requestAccounts" });
         if (accounts?.length > 0) {
           handleAccountsChanged(accounts);
         } else if (connected) {
