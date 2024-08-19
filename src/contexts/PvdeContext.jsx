@@ -52,7 +52,7 @@ export const PvdeProvider = ({ children }) => {
       setEncryptionProvingKey(encryptionProvingKey);
     };
 
-    worker.postMessage("start");
+    worker.postMessage("TIMELOCKPUZZLE");
 
     return () => {
       worker.terminate();
@@ -70,6 +70,7 @@ export const PvdeProvider = ({ children }) => {
         encryptionZkpParam,
         encryptionProvingKey,
         encryptionKey,
+        worker,
       }}
     >
       {children}

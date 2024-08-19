@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useContext, useEffect, useReducer, useState } from "react";
 import styled from "styled-components";
 import classes from "./styles/Modal.module.css";
 import radius from "../assets/images/favicon1.png";
@@ -16,6 +16,8 @@ import bundlerInfo from "../artifacts/contracts/Bundler.sol/Bundler.json";
 import { splitSignature } from "@ethersproject/bytes";
 import { ethers } from "ethers";
 import { Icon, ModalTitle, Wrapper } from "./styles/ModalStyles";
+import { PvdeContext } from "../contexts/PvdeContext";
+import { encryptMessage, generateEncryptionProof } from "pvde";
 
 const StyledAccount = styled.span`
   font-weight: 700;
@@ -64,6 +66,7 @@ const ROLLUPS = [
 ];
 
 const Bridge = () => {
+  const pvdeCtx = useContext(PvdeContext);
   const [account, setAccount] = useState(localStorage.getItem("account"));
   const { sdk, connected, connecting, provider } = useSDK(); // provider
   const [dynamicRollups, setDynamicRollups] = useState(ROLLUPS);
@@ -416,6 +419,108 @@ const Bridge = () => {
     return recoveredAddress == address;
   }
 
+  const [parameter, setParameter] = useState(null);
+
+  useEffect(() => {
+    const applyPvde = async () => {
+      // Check if all necessary data is available
+      if (
+        pvdeCtx.timeLockPuzzle &&
+        pvdeCtx.timeLockPuzzleProof &&
+        pvdeCtx.encryptionZkpParam &&
+        pvdeCtx.encryptionProvingKey &&
+        pvdeCtx.encryptionKey
+      ) {
+        const messageTo = JSON.stringify({});
+        const timeLockPuzzleProof = pvdeCtx.timeLockPuzzleProof;
+        const [timeLockPuzzleSecretInput, timeLockPuzzlePublicInput] = pvdeCtx.timeLockPuzzle;
+        const encryptionZkpParam = pvdeCtx.encryptionZkpParam;
+        const encryptionProvingKey = pvdeCtx.encryptionProvingKey;
+        const encryptionKey = pvdeCtx.encryptionKey;
+        const messageFrom = JSON.stringify({});
+
+        const cipherFrom = await encryptMessage(messageFrom, encryptionKey);
+        const cipherTo = await encryptMessage(messageTo, encryptionKey);
+
+        const fromEncryptionPublicInput = {
+          encryptedData: cipherFrom,
+          kHashValue: timeLockPuzzlePublicInput.kHashValue,
+        };
+        const fromEncryptionSecretInput = {
+          data: messageFrom,
+          k: timeLockPuzzleSecretInput.k,
+        };
+
+        const toEncryptionPublicInput = {
+          encryptedData: cipherTo,
+          kHashValue: timeLockPuzzlePublicInput.kHashValue,
+        };
+        const toEncryptionSecretInput = {
+          data: messageTo,
+          k: timeLockPuzzleSecretInput.k,
+        };
+
+        const fromEncryptionProof = await generateEncryptionProof(
+          encryptionZkpParam,
+          encryptionProvingKey,
+          fromEncryptionPublicInput,
+          fromEncryptionSecretInput
+        );
+
+        const toEncryptionProof = await generateEncryptionProof(
+          encryptionZkpParam,
+          encryptionProvingKey,
+          toEncryptionPublicInput,
+          toEncryptionSecretInput
+        );
+
+        const fromEncryptedTx = {
+          open_data: {
+            raw_tx_hash: "", // get from fromUserTx / toUserTx - empty ok (1,2)
+          },
+          encrypted_data: cipherFrom, // result of 2 (encrypted - encryptedFromUserTx / encryptedToUserTx)
+          pvde_zkp: {
+            public_input: timeLockPuzzlePublicInput,
+            time_lock_puzzle_proof: timeLockPuzzleProof,
+            encryption_proof: fromEncryptionProof,
+          },
+        };
+
+        const toEncryptedTx = {
+          open_data: {
+            raw_tx_hash: "", // get from fromUserTx / toUserTx - empty ok (1,2)
+          },
+          encrypted_data: cipherTo, // result of 2 (encrypted - encryptedFromUserTx / encryptedToUserTx)
+          pvde_zkp: {
+            public_input: timeLockPuzzlePublicInput,
+            time_lock_puzzle_proof: timeLockPuzzleProof,
+            encryption_proof: toEncryptionProof,
+          },
+        };
+
+        setParameter({
+          from: account,
+          rollup_id_list: [0, 1],
+          encrypted_tx_list: [fromEncryptedTx, toEncryptedTx],
+          time_lock_puzzle: pvdeCtx.timeLockPuzzle,
+          bundle_tx_signature: "bundleTxSignature",
+        });
+      }
+    };
+
+    applyPvde();
+  }, [
+    pvdeCtx.timeLockPuzzle,
+    pvdeCtx.timeLockPuzzleProof,
+    pvdeCtx.encryptionZkpParam,
+    pvdeCtx.encryptionProvingKey,
+    pvdeCtx.encryptionKey,
+  ]);
+
+  const logger = () => {
+    console.log("hello:", parameter);
+  };
+
   return (
     <>
       <StyledAccount>{account ? account : "Not Connected"}</StyledAccount>
@@ -463,7 +568,7 @@ const Bridge = () => {
             <Container className={classes.level_3}>
               {connected ? (
                 <Container>
-                  <Button className={classes.level_4} kind='default' paint='#AD1FEA' type='button' onClick={transfer}>
+                  <Button className={classes.level_4} kind='default' paint='#AD1FEA' type='button' onClick={logger}>
                     Transfer
                   </Button>
                 </Container>
