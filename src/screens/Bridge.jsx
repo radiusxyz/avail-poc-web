@@ -424,13 +424,10 @@ const Bridge = () => {
   useEffect(() => {
     const applyPvde = async () => {
       // Check if all necessary data is available
-      if (
-        pvdeCtx.timeLockPuzzle &&
-        pvdeCtx.timeLockPuzzleProof &&
-        pvdeCtx.encryptionZkpParam &&
-        pvdeCtx.encryptionProvingKey &&
-        pvdeCtx.encryptionKey
-      ) {
+      if (pvdeCtx.timeLockPuzzle && pvdeCtx.timeLockPuzzleProof && pvdeCtx.encryptionKey) {
+        const worker = new Worker(new URL("../pvdeWorker.js", import.meta.url), {
+          type: "module",
+        });
         const messageTo = JSON.stringify({});
         const timeLockPuzzleProof = pvdeCtx.timeLockPuzzleProof;
         const [timeLockPuzzleSecretInput, timeLockPuzzlePublicInput] = pvdeCtx.timeLockPuzzle;
@@ -473,6 +470,26 @@ const Bridge = () => {
           toEncryptionPublicInput,
           toEncryptionSecretInput
         );
+
+        worker.postMessage({
+          task: "ENCRYPTION",
+          data: {
+            message: messageFrom,
+            encKey: encryptionKey,
+            encryptionPublicInput: fromEncryptionPublicInput,
+            encryptionSecretInput: fromEncryptionSecretInput,
+          },
+        });
+
+        worker.postMessage({
+          task: "ENCRYPTION",
+          data: {
+            messageTo,
+            encKey: encryptionKey,
+            encryptionPublicInput: toEncryptionPublicInput,
+            encryptionSecretInput: toEncryptionSecretInput,
+          },
+        });
 
         const fromEncryptedTx = {
           open_data: {
