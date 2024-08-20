@@ -420,107 +420,55 @@ const Bridge = () => {
   }
 
   const [parameter, setParameter] = useState(null);
+  const [cipherFrom, setCipherFrom] = useState("");
+  const [cipherTo, setCipherTo] = useState("");
+  const [fromEncryptionProof, setFromEncryptionProof] = useState("");
+  const [toEncryptionProof, setToEncryptionProof] = useState("");
 
   useEffect(() => {
     const applyPvde = async () => {
-      // Check if all necessary data is available
       if (pvdeCtx.timeLockPuzzle && pvdeCtx.timeLockPuzzleProof && pvdeCtx.encryptionKey) {
+        const messageFrom = "messageFrom";
+        const messageTo = "messageTo";
+        const [timeLockPuzzleSecretInput, timeLockPuzzlePublicInput] = pvdeCtx.timeLockPuzzle;
+        const encryptionKey = pvdeCtx.encryptionKey;
+
         const worker = new Worker(new URL("../pvdeWorker.js", import.meta.url), {
           type: "module",
         });
-        const messageTo = JSON.stringify({});
-        const timeLockPuzzleProof = pvdeCtx.timeLockPuzzleProof;
-        const [timeLockPuzzleSecretInput, timeLockPuzzlePublicInput] = pvdeCtx.timeLockPuzzle;
-        const encryptionZkpParam = pvdeCtx.encryptionZkpParam;
-        const encryptionProvingKey = pvdeCtx.encryptionProvingKey;
-        const encryptionKey = pvdeCtx.encryptionKey;
-        const messageFrom = JSON.stringify({});
 
-        const cipherFrom = await encryptMessage(messageFrom, encryptionKey);
-        const cipherTo = await encryptMessage(messageTo, encryptionKey);
+        worker.onmessage = (event) => {
+          const { cipher, encryptionProof, type } = event.data;
 
-        const fromEncryptionPublicInput = {
-          encryptedData: cipherFrom,
-          kHashValue: timeLockPuzzlePublicInput.kHashValue,
+          if (type === "FROM_ENCRYPTION") {
+            setCipherFrom(cipher);
+            setFromEncryptionProof(encryptionProof);
+          } else if (type === "TO_ENCRYPTION") {
+            setCipherTo(cipher);
+            setToEncryptionProof(encryptionProof);
+          }
         };
-        const fromEncryptionSecretInput = {
-          data: messageFrom,
-          k: timeLockPuzzleSecretInput.k,
-        };
-
-        const toEncryptionPublicInput = {
-          encryptedData: cipherTo,
-          kHashValue: timeLockPuzzlePublicInput.kHashValue,
-        };
-        const toEncryptionSecretInput = {
-          data: messageTo,
-          k: timeLockPuzzleSecretInput.k,
-        };
-
-        const fromEncryptionProof = await generateEncryptionProof(
-          encryptionZkpParam,
-          encryptionProvingKey,
-          fromEncryptionPublicInput,
-          fromEncryptionSecretInput
-        );
-
-        const toEncryptionProof = await generateEncryptionProof(
-          encryptionZkpParam,
-          encryptionProvingKey,
-          toEncryptionPublicInput,
-          toEncryptionSecretInput
-        );
 
         worker.postMessage({
           task: "ENCRYPTION",
+          type: "FROM_ENCRYPTION",
           data: {
             message: messageFrom,
             encKey: encryptionKey,
-            encryptionPublicInput: fromEncryptionPublicInput,
-            encryptionSecretInput: fromEncryptionSecretInput,
+            timeLockPuzzlePublicInput,
+            timeLockPuzzleSecretInput,
           },
         });
 
         worker.postMessage({
           task: "ENCRYPTION",
+          type: "TO_ENCRYPTION",
           data: {
-            messageTo,
+            message: messageTo,
             encKey: encryptionKey,
-            encryptionPublicInput: toEncryptionPublicInput,
-            encryptionSecretInput: toEncryptionSecretInput,
+            timeLockPuzzlePublicInput,
+            timeLockPuzzleSecretInput,
           },
-        });
-
-        const fromEncryptedTx = {
-          open_data: {
-            raw_tx_hash: "", // get from fromUserTx / toUserTx - empty ok (1,2)
-          },
-          encrypted_data: cipherFrom, // result of 2 (encrypted - encryptedFromUserTx / encryptedToUserTx)
-          pvde_zkp: {
-            public_input: timeLockPuzzlePublicInput,
-            time_lock_puzzle_proof: timeLockPuzzleProof,
-            encryption_proof: fromEncryptionProof,
-          },
-        };
-
-        const toEncryptedTx = {
-          open_data: {
-            raw_tx_hash: "", // get from fromUserTx / toUserTx - empty ok (1,2)
-          },
-          encrypted_data: cipherTo, // result of 2 (encrypted - encryptedFromUserTx / encryptedToUserTx)
-          pvde_zkp: {
-            public_input: timeLockPuzzlePublicInput,
-            time_lock_puzzle_proof: timeLockPuzzleProof,
-            encryption_proof: toEncryptionProof,
-          },
-        };
-
-        setParameter({
-          from: account,
-          rollup_id_list: [0, 1],
-          encrypted_tx_list: [fromEncryptedTx, toEncryptedTx],
-          time_lock_puzzle: pvdeCtx.timeLockPuzzle,
-          bundle_tx_signature: "bundleTxSignature",
         });
       }
     };
@@ -534,8 +482,50 @@ const Bridge = () => {
     pvdeCtx.encryptionKey,
   ]);
 
-  const logger = () => {
-    console.log("hello:", parameter);
+  useEffect(() => {
+    if (cipherFrom && cipherTo && fromEncryptionProof && toEncryptionProof) {
+      console.log("useEffect cipherFrom", cipherFrom);
+      console.log("useEffect cipherTo", cipherTo);
+      console.log("useEffect fromEncryptionProof", fromEncryptionProof);
+      console.log("useEffect toEncryptionProof", toEncryptionProof);
+
+      const fromEncryptedTx = {
+        open_data: {
+          raw_tx_hash: "", // get from fromUserTx / toUserTx - empty ok (1,2)
+        },
+        encrypted_data: cipherFrom,
+        pvde_zkp: {
+          public_input: pvdeCtx.timeLockPuzzle[1],
+          time_lock_puzzle_proof: pvdeCtx.timeLockPuzzleProof,
+          encryption_proof: fromEncryptionProof,
+        },
+      };
+
+      const toEncryptedTx = {
+        open_data: {
+          raw_tx_hash: "", // get from fromUserTx / toUserTx - empty ok (1,2)
+        },
+        encrypted_data: cipherTo,
+        pvde_zkp: {
+          public_input: pvdeCtx.timeLockPuzzle[1],
+          time_lock_puzzle_proof: pvdeCtx.timeLockPuzzleProof,
+          encryption_proof: toEncryptionProof,
+        },
+      };
+
+      setParameter({
+        from: account,
+        rollup_id_list: [0, 1],
+        encrypted_tx_list: [fromEncryptedTx, toEncryptedTx],
+        time_lock_puzzle: pvdeCtx.timeLockPuzzle,
+        bundle_tx_signature: "bundleTxSignature",
+      });
+    }
+  }, [cipherFrom, cipherTo, fromEncryptionProof, toEncryptionProof]);
+
+  const logger = (e) => {
+    e.preventDefault();
+    console.log("Final Result:", parameter);
   };
 
   return (

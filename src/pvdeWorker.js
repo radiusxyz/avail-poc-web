@@ -9,10 +9,13 @@ import {
   fetchEncryptionZkpParam,
   fetchEncryptionProvingKey,
   generateSymmetricKey,
+  encryptMessage,
+  generateEncryptionProof,
 } from "pvde";
 
 self.onmessage = async (event) => {
-  const { task } = event.data;
+  const { task, type, data } = event.data;
+
   if (task === "TIMELOCKPUZZLE") {
     const tlpParam = await generateTimeLockPuzzleParam();
     const tlp = await generateTimeLockPuzzle(tlpParam);
@@ -34,11 +37,18 @@ self.onmessage = async (event) => {
       encryptionKey: encKey,
     });
   }
+
   if (task === "ENCRYPTION") {
-    const { message, encKey, encryptionPublicInput, encryptionSecretInput } = event.data;
+    // console.log("event.data received in Worker:", event.data);
+
+    const { message, encKey, timeLockPuzzlePublicInput, timeLockPuzzleSecretInput } = data;
+
     const encZkpParam = await fetchEncryptionZkpParam();
     const encProvingKey = await fetchEncryptionProvingKey();
     const cipher = await encryptMessage(message, encKey);
+
+    const encryptionPublicInput = { encryptedData: cipher, kHashValue: timeLockPuzzlePublicInput.kHashValue };
+    const encryptionSecretInput = { data: message, k: timeLockPuzzleSecretInput.k };
     const encProof = await generateEncryptionProof(
       encZkpParam,
       encProvingKey,
@@ -46,9 +56,19 @@ self.onmessage = async (event) => {
       encryptionSecretInput
     );
 
-    self.postMessage({
-      cipher,
-      encryptionProof: encProof,
-    });
+    // Identify the type of encryption (FROM or TO) and send appropriate message
+    if (type === "FROM_ENCRYPTION") {
+      self.postMessage({
+        type: "FROM_ENCRYPTION",
+        cipher,
+        encryptionProof: encProof,
+      });
+    } else if (type === "TO_ENCRYPTION") {
+      self.postMessage({
+        type: "TO_ENCRYPTION",
+        cipher,
+        encryptionProof: encProof,
+      });
+    }
   }
 };
