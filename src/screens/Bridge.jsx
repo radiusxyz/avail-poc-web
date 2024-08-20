@@ -274,7 +274,7 @@ const Bridge = () => {
           z: BigUint,
           o: BigUint,
           k_two: BigUint,
-          k_hash_value: PoseidonHashValue,
+          k_hash_value: HashValue,
         },
         time_lock_puzzle_proof: {},
         encryption_proof: {},
